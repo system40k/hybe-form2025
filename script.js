@@ -767,6 +767,99 @@ if (typeof document !== "undefined") {
     }
     populateCountries();
 
+    async function fetchAndPopulateEvents() {
+      const eventsList = document.getElementById('events-list');
+      const eventsLoading = document.getElementById('events-loading');
+      const eventsError = document.getElementById('events-error');
+
+      if (!eventsList || !eventsLoading || !eventsError) return;
+
+      try {
+        eventsLoading.classList.remove('d-none');
+        eventsError.classList.add('d-none');
+        eventsList.innerHTML = '';
+
+        const eventsData = [
+          { id: 'bts-concert-seoul', name: 'BTS Seoul Concert', date: '2026-04-09', artist: 'BTS' },
+          { id: 'bts-concert-tokyo', name: 'BTS Tokyo Dome', date: '2026-04-17', artist: 'BTS' },
+          { id: 'enhypen-tour', name: 'ENHYPEN World Tour', date: '2026-05-15', artist: 'ENHYPEN' },
+          { id: 'andteam-concert', name: '&TEAM Blaze Tour Japan', date: '2026-05-13', artist: '&TEAM' },
+          { id: 'lesserafim-concert', name: 'LE SSERAFIM Comeback Event', date: '2026-03-20', artist: 'LE SSERAFIM' },
+          { id: 'seventeen-unit', name: 'SEVENTEEN DxS Serenade Tour', date: '2026-04-17', artist: 'SEVENTEEN' },
+        ];
+
+        renderEvents(eventsData);
+        eventsLoading.classList.add('d-none');
+      } catch (error) {
+        console.error('Failed to load events', error);
+        eventsLoading.classList.add('d-none');
+        eventsError.classList.remove('d-none');
+      }
+    }
+
+    function renderEvents(events) {
+      const eventsList = document.getElementById('events-list');
+      if (!eventsList || !Array.isArray(events)) return;
+
+      eventsList.innerHTML = '';
+      events.forEach((event) => {
+        const col = document.createElement('div');
+        col.className = 'col-md-6';
+
+        const eventCard = document.createElement('div');
+        eventCard.className = 'card h-100 event-card border-0 shadow-sm';
+
+        const eventBody = document.createElement('div');
+        eventBody.className = 'card-body d-flex align-items-start gap-3';
+
+        const eventCheckbox = document.createElement('input');
+        eventCheckbox.type = 'checkbox';
+        eventCheckbox.className = 'form-check-input mt-1';
+        eventCheckbox.style.flexShrink = '0';
+        eventCheckbox.id = `event-${event.id}`;
+        eventCheckbox.value = event.id;
+        eventCheckbox.name = `event-${event.id}`;
+
+        const eventLabel = document.createElement('label');
+        eventLabel.className = 'form-check-label event-label flex-grow-1 mb-0';
+        eventLabel.htmlFor = `event-${event.id}`;
+
+        const eventTitle = document.createElement('div');
+        eventTitle.className = 'fw-bold text-dark';
+        eventTitle.textContent = event.name;
+
+        const eventDate = document.createElement('div');
+        eventDate.className = 'text-muted small mt-1';
+        const dateObj = new Date(event.date);
+        eventDate.textContent = dateObj.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+
+        const eventArtist = document.createElement('div');
+        eventArtist.className = 'text-primary small mt-1';
+        eventArtist.textContent = event.artist;
+
+        eventLabel.appendChild(eventTitle);
+        eventLabel.appendChild(eventDate);
+        eventLabel.appendChild(eventArtist);
+
+        eventBody.appendChild(eventCheckbox);
+        eventBody.appendChild(eventLabel);
+        eventCard.appendChild(eventBody);
+        col.appendChild(eventCard);
+        eventsList.appendChild(col);
+
+        eventCheckbox.addEventListener('change', updateSelectedEvents);
+      });
+    }
+
+    function updateSelectedEvents() {
+      const selectedCheckboxes = document.querySelectorAll('#events-list input[type="checkbox"]:checked');
+      const selectedIds = Array.from(selectedCheckboxes).map(cb => cb.value);
+      const selectedEventsInput = document.getElementById('selected-events');
+      if (selectedEventsInput) {
+        selectedEventsInput.value = selectedIds.join(',');
+      }
+    }
+
     const validationRules = {
       "referral-code": {
         required: true,
@@ -821,6 +914,10 @@ if (typeof document !== "undefined") {
       "installment-terms": {
         required: false,
         message: "You must agree to the installment terms.",
+      },
+      "selected-events": {
+        required: true,
+        message: "Please select at least one event.",
       },
     };
 
@@ -1474,6 +1571,11 @@ if (typeof document !== "undefined") {
         }
       } catch {}
 
+      const selectedEventsInput = document.getElementById("selected-events");
+      if (selectedEventsInput) {
+        formData.set("selected-events", selectedEventsInput.value);
+      }
+
       formData.set("user-agent", navigator.userAgent);
       formData.set("screen-resolution", `${screen.width}x${screen.height}`);
       formData.set("referrer", document.referrer || "Direct");
@@ -1622,6 +1724,18 @@ if (typeof document !== "undefined") {
       text(get("confirm-branch"), document.getElementById("branch").value);
       text(get("confirm-group"), document.getElementById("group").value);
       text(get("confirm-artist"), document.getElementById("artist").value);
+
+      const selectedCheckboxes = document.querySelectorAll('#events-list input[type="checkbox"]:checked');
+      const selectedEventNames = Array.from(selectedCheckboxes).map(cb => {
+        const label = cb.nextElementSibling;
+        if (label) {
+          const titleDiv = label.querySelector('div.fw-bold');
+          return titleDiv ? titleDiv.textContent : '';
+        }
+        return '';
+      }).filter(Boolean);
+      text(get("confirm-events"), selectedEventNames.length > 0 ? selectedEventNames.join(', ') : "None selected");
+
       text(get("confirm-payment"), document.getElementById("payment-type").value);
       const contactMethod = document.querySelector('input[name="contact-method"]:checked');
       text(get("confirm-contact"), contactMethod ? contactMethod.value : "");
@@ -1723,9 +1837,9 @@ if (typeof document !== "undefined") {
       if (onboardingModalInstance) modalManager.show('onboardingModal');
     } catch {}
 
-    // Create and initialize a lightweight 4-step wizard grouping existing fields
+    // Create and initialize a lightweight 5-step wizard grouping existing fields
     function createWizard() {
-      const totalSteps = 4;
+      const totalSteps = 5;
       let current = 1;
       const form = document.getElementById('subscription-form');
       if (!form) return;
@@ -1742,7 +1856,8 @@ if (typeof document !== "undefined") {
         1: ['referral-code','full-name','email','zangi-id','phone'],
         2: ['address-section','country-select','dob','gender'],
         3: ['branch','group','artist','subscription-amount','payment-type','installment-options','payment-methods','email-contact'],
-        4: ['feedback','installment-terms-wrapper','privacy-policy','subscription-agreement','submit-btn','submit-help-text']
+        4: ['events-section'],
+        5: ['feedback','installment-terms-wrapper','privacy-policy','subscription-agreement','submit-btn','submit-help-text']
       };
 
       // Build indicators and step containers
@@ -1750,7 +1865,7 @@ if (typeof document !== "undefined") {
       indicators.className = 'step-indicators d-flex justify-content-center mb-3';
       indicators.id = 'wizard-step-indicators';
       indicators.setAttribute('role','tablist');
-      ['Profile','Address','Preferences','Review'].forEach((label, i) => {
+      ['Profile','Address','Preferences','Events','Review'].forEach((label, i) => {
         const btn = document.createElement('button');
         btn.type = 'button';
         btn.id = `step-tab-${i+1}`;
@@ -1854,6 +1969,7 @@ if (typeof document !== "undefined") {
     }
 
     try { createWizard(); } catch (e) { console.warn('Wizard init failed', e); }
+    try { fetchAndPopulateEvents(); } catch (e) { console.warn('Event population failed', e); }
     updateProgress();
     updateSubmitButton();
     // Ensure subscription amount and installment UI reflect initial selection

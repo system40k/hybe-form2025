@@ -889,3 +889,50 @@ footer a[lang="ko"] {
   .wizard-nav { gap: 8px; }
   .wizard-nav .btn { flex: 1 1 auto; }
 }
+
+/* Events Section Styles */
+#events-section {
+  margin-bottom: 1.5rem;
+}
+
+.event-card {
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.event-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12) !important;
+}
+
+.event-card input[type="checkbox"] {
+  margin-right: 0.75rem;
+  cursor: pointer;
+}
+
+.event-card input[type="checkbox"]:checked {
+  background-color: #3498db;
+  border-color: #3498db;
+}
+
+.event-label {
+  cursor: pointer;
+  margin-bottom: 0;
+  flex-grow: 1;
+}
+
+.event-label strong {
+  display: block;
+  margin-bottom: 0.25rem;
+  color: #2c3e50;
+}
+
+#events-loading,
+#events-error {
+  border-radius: 8px;
+}
+
+#events-error {
+  padding: 1rem;
+}
