@@ -354,6 +354,7 @@
               <dt class="col-5">Branch</dt><dd class="col-7" id="confirm-branch"></dd>
               <dt class="col-5">Group</dt><dd class="col-7" id="confirm-group"></dd>
               <dt class="col-5">Artist</dt><dd class="col-7" id="confirm-artist"></dd>
+              <dt class="col-5">Events</dt><dd class="col-7" id="confirm-events"></dd>
               <dt class="col-5">Payment</dt><dd class="col-7" id="confirm-payment"></dd>
               <dt class="col-5">Contact</dt><dd class="col-7" id="confirm-contact"></dd>
             </dl>
@@ -1228,6 +1229,31 @@
                         >Cash <span class="ms-1">(Unavailable)</span></label
                       >
                     </div>
+                  </div>
+
+                  <!-- Events Section -->
+                  <div id="events-section" class="mb-3" data-aos="fade-up" data-aos-delay="450">
+                    <label class="form-label">
+                      Select Upcoming Events
+                      <span class="text-danger">*</span>
+                    </label>
+
+                    <div id="events-loading" class="text-center py-4 d-none">
+                      <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading events...</span>
+                      </div>
+                      <p class="text-muted mt-2">Loading upcoming events...</p>
+                    </div>
+
+                    <div id="events-error" class="alert alert-danger d-none" role="alert">
+                      <strong>Failed to load events.</strong> Please refresh the page and try again.
+                    </div>
+
+                    <div id="events-list" class="row g-3">
+                      <!-- Events will be rendered here -->
+                    </div>
+
+                    <input type="hidden" id="selected-events" name="selected-events" value="" required />
                   </div>
 
                   <!-- Preferred Contact Method -->
