@@ -130,7 +130,195 @@ if (typeof document !== "undefined") {
     }
   }
 
+  const translations = {
+    ko: {
+      "🌐 Auto": "🌐 자동",
+      "Language": "언어",
+      "English": "영어",
+      "한국어": "한국어",
+      "日本語": "일본어",
+      "Español": "스페인어",
+      "Français": "프랑스어",
+      "Deutsch": "독일어",
+      "中文": "중국어",
+      "Welcome to HYBE’s Fan-Permit!": "HYBE 팬 패밋에 오신 것을 환영합니다!",
+      "Gain exclusive access to artist events, official merchandise, and direct fan engagement. This form provides a secure and private channel for connecting with your favorite artists, in full compliance with Korean law. HYBE is committed to protecting the rights, privacy, and safety of all participants, ensuring legally compliant and authentic interactions. Learn more about our dedication to responsible fan-artist engagement and data security.": "아티스트 이벤트, 공식 상품, 팬 참여 혜택을 독점적으로 만나보세요. 이 양식은 한국 법률을 준수하며 좋아하는 아티스트와 안전하고 비공개로 소통할 수 있는 채널을 제공합니다. HYBE는 모든 참여자의 권리와 개인정보 및 안전을 보호하고 책임 있는 팬과 아티스트의 교류와 데이터 보안을 위해 최선을 다합니다.",
+      "Start Now": "지금 시작하기",
+      "Verify Your Email": "이메일 인증",
+      "Enter your email address to receive a verification code.": "인증 코드를 받을 이메일 주소를 입력하세요.",
+      "Email Address": "이메일 주소",
+      "Send Verification Code": "인증 코드 보내기",
+      "Didn't receive the code? ": "코드를 받지 못하셨나요? ",
+      "Resend in ": "다시 보내기까지 ",
+      "Enter the 6-digit code we sent to ": "전송된 6자리 코드를 입력하세요: ",
+      "Verification Code": "인증 코드",
+      "Verify Code": "코드 인증",
+      "Use a different email": "다른 이메일 사용",
+      "Email Verified!": "이메일 인증 완료!",
+      "Your email has been verified. You can now proceed with the form.": "이메일이 인증되었습니다. 이제 양식을 계속 작성할 수 있습니다.",
+      "Continue": "계속",
+      "Verifying your answers, please wait...": "입력하신 내용을 확인하고 있습니다. 잠시만 기다려 주세요...",
+      "Loading...": "로드 중...",
+      "Processing payment...": "결제 처리 중...",
+      "You’ll be redirected to our secure payment gateway in": "잠시 후 안전한 결제 게이트웨이로 이동합니다.",
+      "Please do not refresh or close this page.": "이 페이지를 새로 고침하거나 닫지 마세요.",
+      "Completing your HYBE subscription payment securely.": "HYBE 구독 결제를 안전하게 완료하고 있습니다.",
+      "Form Submitted Successfully!": "양식이 성공적으로 제출되었습니다!",
+      "Confirm Your Details": "입력 내용 확인",
+      "Please review your details before submitting:": "제출하기 전에 입력 내용을 확인해 주세요:",
+      "Full Name": "성명",
+      "Email": "이메일",
+      "Phone": "전화번호",
+      "Country": "국가",
+      "DOB": "생년월일",
+      "Gender": "성별",
+      "Branch": "브랜치",
+      "Group": "그룹",
+      "Artist": "아티스트",
+      "Events": "이벤트",
+      "Payment": "결제",
+      "Contact": "연락처",
+      "Edit": "수정",
+      "Confirm & Submit": "확인 및 제출",
+      "Submitting...": "제출 중...",
+      "Please wait while we finalize your submission.": "제출을 완료하는 동안 잠시 기다려 주세요.",
+      "Redirecting to success page...": "완료 페이지로 이동 중...",
+      "Redirecting, please wait...": "이동 중입니다. 잠시 기다려 주세요...",
+      "You will be redirected in": "초 후 이동합니다.",
+      "Official HYBE Fan-Permit 2025/2026": "공식 HYBE 팬 패밋 2025/2026",
+      "Join the Ultimate Fan Community": "최고의 팬 커뮤니티에 참여하세요",
+      "Subscribe for exclusive access to HYBE artist updates, events, and merchandise.": "HYBE 아티스트 소식, 이벤트 및 상품을 독점적으로 만나보세요.",
+      "Our Culture: HYBE DNA": "HYBE의 문화: HYBE DNA",
+      "Referral Code": "추천 코드",
+      "Enter referral code": "추천 코드를 입력하세요",
+      "Full Name ": "성명 ",
+      "Enter your full legal name": "법적 성명을 입력하세요",
+      "Enter your email address": "이메일 주소를 입력하세요",
+      "Zangi ID": "Zangi ID",
+      "Enter your Zangi ID (optional)": "Zangi ID를 입력하세요 (선택 사항)",
+      "Phone Number": "전화번호",
+      "Enter your phone number": "전화번호를 입력하세요",
+      "Address": "주소",
+      "Address Line 1": "주소 1",
+      "Address Line 2": "주소 2",
+      "City": "도시",
+      "State/Province": "주/도",
+      "Postal Code": "우편번호",
+      "Use this address for mailing/delivery": "이 주소를 우편물/배송지로 사용",
+      "Country ": "국가 ",
+      "Select Country": "국가 선택",
+      "Date of Birth": "생년월일",
+      "Select Gender": "성별 선택",
+      "Male": "남성",
+      "Female": "여성",
+      "Other": "기타",
+      "Prefer Not to Say": "선택하지 않음",
+      "Fan-To-Artist Preferences": "팬-아티스트 선호 설정",
+      "Select a HYBE Branch": "HYBE 브랜치 선택",
+      "Select Your Favorite Group": "좋아하는 그룹 선택",
+      "Select a Group": "그룹 선택",
+      "Select Your Favorite Artist(s)": "좋아하는 아티스트 선택",
+      "Select an Artist": "아티스트 선택",
+      "Why Subscribe to the HYBE Fan-Permit?": "왜 HYBE 팬 패밋을 구독해야 하나요?",
+      "Standard vs Premium Membership": "스탠다드 멤버십과 프리미엄 멤버십 비교",
+      "Premium Membership includes:": "프리미엄 멤버십 포함 혜택:",
+      "Limited availability:": "수량 한정:",
+      "Subscription Amount": "구독 금액",
+      "Select Payment Type": "결제 유형 선택",
+      "Select Payment Type": "결제 유형 선택",
+      "Full Payment": "일시불 결제",
+      "Installment": "할부",
+      "Installment Plan": "할부 플랜",
+      "Select Installment Plan": "할부 플랜 선택",
+      "Payment Methods": "결제 방법",
+      "Card Payment": "카드 결제",
+      "Digital Currency": "디지털 통화",
+      "Bank Transfer": "은행 송금",
+      "Mobile Money": "모바일 머니",
+      "Cash": "현금",
+      "(Unavailable)": "(사용 불가)",
+      "Select Upcoming Events": "예정 이벤트 선택",
+      "Loading upcoming events...": "예정 이벤트를 불러오는 중...",
+      "Failed to load events.": "이벤트를 불러오지 못했습니다.",
+      "Preferred Contact Method": "선호 연락 방법",
+      "Via Email": "이메일",
+      "Via SMS": "문자 메시지",
+      "Feedback (Optional)": "의견 (선택 사항)",
+      "Share your thoughts about the Fan-Permit": "팬 패밋에 대한 의견을 남겨 주세요",
+      "Agree to installment terms.": "할부 약관에 동의합니다.",
+      "Privacy Policy": "개인정보 처리방침",
+      "Terms of Service": "서비스 약관",
+      "Agree and complete subscription.": "동의하고 구독을 완료합니다.",
+      "Submit Subscription": "구독 제출",
+      "Quick Links": "빠른 링크",
+      "About Us": "회사 소개",
+      "Careers": "채용",
+      "Contact Us": "문의하기",
+      "Follow us:": "팔로우하기:",
+      "Empowering global K-pop innovation.": "글로벌 K-pop 혁신을 이끌어 갑니다."
+    }
+  };
+
+  const languageNames = { en: "English", ko: "한국어", ja: "日本語", es: "Español", fr: "Français", de: "Deutsch", zh: "中文" };
+  let activeLanguage = "ko";
+  const originalTextNodes = new WeakMap();
+  const originalAttributes = new WeakMap();
+
+  function translateText(value) {
+    const source = value.trim();
+    const translated = translations[activeLanguage]?.[source];
+    if (!translated || !source) return value;
+    return value.replace(source, translated);
+  }
+
+  function translatePage(language) {
+    activeLanguage = language === "auto" ? detectLanguage() : language;
+    document.documentElement.lang = activeLanguage;
+    document.querySelectorAll("[data-i18n]").forEach((element) => {
+      element.textContent = translations[activeLanguage]?.[element.dataset.i18n] || element.dataset.i18n;
+    });
+    const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+    const textNodes = [];
+    while (walker.nextNode()) textNodes.push(walker.currentNode);
+    textNodes.forEach((node) => {
+      if (!originalTextNodes.has(node)) originalTextNodes.set(node, node.nodeValue);
+      node.nodeValue = translateText(originalTextNodes.get(node));
+    });
+    document.querySelectorAll("input[placeholder], textarea[placeholder]").forEach((element) => {
+      if (!originalAttributes.has(element)) originalAttributes.set(element, { placeholder: element.placeholder });
+      element.placeholder = translateText(originalAttributes.get(element).placeholder);
+    });
+    document.querySelectorAll("[data-bs-title]").forEach((element) => {
+      if (!originalAttributes.has(element)) originalAttributes.set(element, { title: element.dataset.bsTitle });
+      element.dataset.bsTitle = translateText(originalAttributes.get(element).title);
+    });
+    const languageInput = document.getElementById("language");
+    if (languageInput) languageInput.value = activeLanguage;
+    const selector = document.getElementById("language-switcher");
+    if (selector && selector.value !== "auto") selector.value = activeLanguage;
+  }
+
+  function detectLanguage() {
+    const browserLanguage = (navigator.languages?.[0] || navigator.language || "ko").slice(0, 2).toLowerCase();
+    return languageNames[browserLanguage] ? browserLanguage : "ko";
+  }
+
   document.addEventListener("DOMContentLoaded", () => {
+    const languageSelector = document.getElementById("language-switcher");
+    const storedLanguage = localStorage.getItem("hybe-language");
+    if (languageSelector) {
+      languageSelector.addEventListener("change", () => {
+        const selectedLanguage = languageSelector.value;
+        if (selectedLanguage === "auto") localStorage.removeItem("hybe-language");
+        else localStorage.setItem("hybe-language", selectedLanguage);
+        translatePage(selectedLanguage);
+      });
+      if (storedLanguage && languageNames[storedLanguage]) languageSelector.value = storedLanguage;
+    }
+    translatePage(storedLanguage || "auto");
+    const translationObserver = new MutationObserver(() => translatePage(activeLanguage));
+    translationObserver.observe(document.body, { childList: true, subtree: true });
+
     if (typeof AOS !== "undefined") {
       AOS.init({ duration: 800, once: true });
     }
@@ -789,6 +977,7 @@ if (typeof document !== "undefined") {
         ];
 
         renderEvents(eventsData);
+        translatePage(activeLanguage);
         eventsLoading.classList.add('d-none');
       } catch (error) {
         console.error('Failed to load events', error);
