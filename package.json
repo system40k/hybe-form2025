@@ -6,7 +6,7 @@
   "type": "module",
   "scripts": {
     "start": "node server.js",
-    "dev": "vite build --watch & node server.js",
+    "dev": "vite build --watch & node server.cjs",
     "build": "vite build",
     "lint": "eslint .",
     "format": "prettier --write \"**/*.{js,html,css,json,md}\"",
