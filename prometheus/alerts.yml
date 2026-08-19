@@ -1,0 +1,128 @@
+# Prometheus Alert Rules for HYBE OTP System
+
+groups:
+  - name: hybe-otp-alerts
+    interval: 30s
+    rules:
+      # High OTP failure rate
+      - alert: HighOTPFailureRate
+        expr: rate(otp_verifications_total{status="failure"}[5m]) / rate(otp_verifications_total[5m]) > 0.2
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High OTP failure rate detected"
+          description: "OTP failure rate is {{ $value | humanizePercentage }} over the last 5 minutes"
+
+      # Critical OTP failure rate
+      - alert: CriticalOTPFailureRate
+        expr: rate(otp_verifications_total{status="failure"}[5m]) / rate(otp_verifications_total[5m]) > 0.5
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Critical OTP failure rate"
+          description: "OTP failure rate is {{ $value | humanizePercentage }} - possible attack or system issue"
+
+      # High rate limit triggers
+      - alert: HighRateLimitTriggers
+        expr: rate(rate_limit_exceeded_total[5m]) > 10
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High rate limiting activity"
+          description: "Rate limits being triggered {{ $value }} times per second"
+
+      # Database connection pool exhaustion
+      - alert: DatabaseConnectionPoolHigh
+        expr: db_pool_connections_active / db_pool_connections_max > 0.8
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Database connection pool nearly exhausted"
+          description: "Database connection pool is {{ $value | humanizePercentage }} full"
+
+      # App pod down
+      - alert: AppPodDown
+        expr: up{job="hybe-app"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Application pod is down"
+          description: "App instance {{ $labels.instance }} has been down for more than 1 minute"
+
+      # PostgreSQL down
+      - alert: PostgreSQLDown
+        expr: up{job="postgres"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "PostgreSQL database is down"
+          description: "PostgreSQL instance {{ $labels.instance }} has been down for more than 1 minute"
+
+      # Redis down
+      - alert: RedisDown
+        expr: up{job="redis"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Redis cache is down"
+          description: "Redis instance {{ $labels.instance }} has been down for more than 1 minute"
+
+      # High request latency
+      - alert: HighRequestLatency
+        expr: histogram_quantile(0.95, rate(http_request_duration_seconds_bucket[5m])) > 1
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High request latency detected"
+          description: "95th percentile latency is {{ $value }} seconds"
+
+      # Disk space low (for volumes)
+      - alert: DiskSpaceLow
+        expr: (node_filesystem_avail_bytes / node_filesystem_size_bytes) * 100 < 20
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Disk space running low"
+          description: "Disk space is {{ $value | humanizePercentage }} available on {{ $labels.mountpoint }}"
+
+      # Memory usage high
+      - alert: HighMemoryUsage
+        expr: (container_memory_usage_bytes / container_spec_memory_limit_bytes) * 100 > 85
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Container memory usage high"
+          description: "Container {{ $labels.name }} memory usage is {{ $value | humanizePercentage }}"
+
+  - name: hybe-security-alerts
+    interval: 30s
+    rules:
+      # Possible brute force attack
+      - alert: PossibleBruteForceAttack
+        expr: rate(otp_verifications_total{status="failure"}[2m]) > 20
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Possible brute force attack detected"
+          description: "High number of failed OTP attempts: {{ $value }} per second"
+
+      # Unusual traffic spike
+      - alert: UnusualTrafficSpike
+        expr: rate(http_requests_total[1m]) > 100
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Unusual traffic spike detected"
+          description: "Request rate is {{ $value }} requests per second"
