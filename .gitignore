@@ -1,8 +1,7 @@
 ```
 # Build artifacts
+*.cjs
 dist/
-build/
-*.js
 
 # Dependencies
 node_modules/
@@ -12,11 +11,15 @@ node_modules/
 .env.local
 *.env.*
 
+# Logs and temp files
+*.log
+*.tmp
+
 # Editors
 .vscode/
 .idea/
 
-# Logs and temp files
-*.log
-*.tmp
+# OS generated files
+.DS_Store
+Thumbs.db
 ```
