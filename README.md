@@ -1,38 +1,58 @@
 # HYBE Fan-Permit Email OTP Verification System
 
-A secure fan registration system with email verification using 6-digit OTP codes.
+## 🏆 Enterprise-Grade Production System
 
-## 🎯 Features
+A secure, scalable fan registration platform with email verification using 6-digit OTP codes. Built for enterprise deployment with Docker, Kubernetes, and comprehensive monitoring.
+
+### 🎯 Core Features
 
 - **Email OTP Verification**: Users must verify their email before submitting the form
-- **Secure Storage**: Supabase database with encrypted OTP storage
-- **Rate Limiting**: Multi-tier protection against abuse (email + IP based)
+- **Secure Storage**: PostgreSQL database with encrypted OTP storage (PBKDF2 hashing)
+- **Rate Limiting**: Multi-tier protection against abuse (email + IP based via Redis)
 - **Brute Force Protection**: Progressive lockouts after failed attempts
 - **Temporary Email Blocking**: Blocks known disposable email services
 - **Security Headers**: HSTS, CSP, XSS protection, and more
 - **Responsive Design**: Mobile-friendly form with Bootstrap 5
+- **Enterprise Monitoring**: Prometheus metrics, Grafana dashboards, distributed tracing
+- **High Availability**: Horizontal scaling, load balancing, automatic failover
+- **Compliance Ready**: Audit logging, GDPR features, SOC 2 preparation
 
-## 📁 Project Structure
+### 📁 Project Structure
 
 ```
-├── lib/                      # Core libraries
-│   ├── otp-service.js        # OTP generation and verification
-│   ├── security.js           # Security utilities and configuration
-│   └── supabaseClient.js     # Supabase database client
-├── netlify/functions/        # Serverless functions for Netlify
-│   ├── otp-send.js          # Send OTP via email
-│   ├── otp-verify.js        # Verify OTP code
-│   └── submit-form.js       # Process form submission
-├── tests/                    # E2E tests
-│   ├── e2e-flow.spec.js     # Full user journey tests
+/workspace
+├── Dockerfile                    # Multi-stage production Docker build
+├── docker-compose.yml            # Full stack (app, postgres, redis, nginx, monitoring)
+├── nginx.conf                    # Reverse proxy with SSL and rate limiting
+├── ENTERPRISE_PRODUCTION.md      # Architecture & infrastructure guide
+├── DEPLOYMENT_GUIDE.md           # Step-by-step deployment instructions
+├── QUICK_REFERENCE.md            # Quick command reference
+├── k8s/                          # Kubernetes manifests
+│   ├── deployment.yaml           # Deployment, Service, HPA, Ingress
+│   └── secrets.yaml              # Secrets template (use External Secrets in prod)
+├── scripts/
+│   └── init-db.sql               # PostgreSQL schema initialization
+├── prometheus/
+│   └── prometheus.yml            # Metrics collection config
+├── grafana/provisioning/         # Dashboard auto-provisioning
+├── lib/                          # Core libraries
+│   ├── otp-service.js            # OTP generation and verification
+│   ├── security.js               # Security utilities and configuration
+│   └── supabaseClient.js         # Database client (PostgreSQL compatible)
+├── netlify/functions/            # Serverless functions for Netlify
+│   ├── otp-send.js               # Send OTP via email
+│   ├── otp-verify.js             # Verify OTP code
+│   └── submit-form.js            # Process form submission
+├── tests/                        # E2E tests with Playwright
+│   ├── e2e-flow.spec.js          # Full user journey tests
 │   └── otp-verification.spec.js  # OTP-specific tests
-├── dist/                     # Production build output
-├── index.html               # Main HTML file
-├── script.js                # Frontend JavaScript
-├── styles.css               # Custom styles
-├── server.js                # Express development server
-├── netlify.toml             # Netlify configuration
-└── .env.example             # Environment variables template
+├── dist/                         # Production build output (Vite)
+├── index.html                    # Main HTML file
+├── script.js                     # Frontend JavaScript
+├── styles.css                    # Custom styles
+├── server.js                     # Express development server
+├── netlify.toml                  # Netlify configuration
+└── .env.example                  # Environment variables template
 ```
 
 ## 🚀 Getting Started
