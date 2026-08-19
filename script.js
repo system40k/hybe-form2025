@@ -256,11 +256,262 @@ if (typeof document !== "undefined") {
       "Contact Us": "문의하기",
       "Follow us:": "팔로우하기:",
       "Empowering global K-pop innovation.": "글로벌 K-pop 혁신을 이끌어 갑니다."
+    },
+    en: {
+      "🌐 Auto": "🌐 Auto",
+      "Language": "Language",
+      "English": "English",
+      "한국어": "Korean",
+      "日本語": "Japanese",
+      "Español": "Spanish",
+      "Français": "French",
+      "Deutsch": "German",
+      "中文": "Chinese",
+      "Welcome to HYBE's Fan-Permit!": "Welcome to HYBE's Fan-Permit!",
+      "Gain exclusive access to artist events, official merchandise, and direct fan engagement. This form provides a secure and private channel for connecting with your favorite artists, in full compliance with Korean law. HYBE is committed to protecting the rights, privacy, and safety of all participants, ensuring legally compliant and authentic interactions. Learn more about our dedication to responsible fan-artist engagement and data security.": "Gain exclusive access to artist events, official merchandise, and direct fan engagement. This form provides a secure and private channel for connecting with your favorite artists, in full compliance with Korean law. HYBE is committed to protecting the rights, privacy, and safety of all participants, ensuring legally compliant and authentic interactions. Learn more about our dedication to responsible fan-artist engagement and data security.",
+      "Start Now": "Start Now",
+      "Verify Your Email": "Verify Your Email",
+      "Enter your email address to receive a verification code.": "Enter your email address to receive a verification code.",
+      "Email Address": "Email Address",
+      "Send Verification Code": "Send Verification Code",
+      "Didn't receive the code? ": "Didn't receive the code? ",
+      "Resend in ": "Resend in ",
+      "Enter the 6-digit code we sent to ": "Enter the 6-digit code we sent to ",
+      "Verification Code": "Verification Code",
+      "Verify Code": "Verify Code",
+      "Use a different email": "Use a different email",
+      "Email Verified!": "Email Verified!",
+      "Your email has been verified. You can now proceed with the form.": "Your email has been verified. You can now proceed with the form.",
+      "Continue": "Continue",
+      "Verifying your answers, please wait...": "Verifying your answers, please wait...",
+      "Loading...": "Loading...",
+      "Processing payment...": "Processing payment...",
+      "You'll be redirected to our secure payment gateway in": "You'll be redirected to our secure payment gateway in",
+      "Please do not refresh or close this page.": "Please do not refresh or close this page.",
+      "Completing your HYBE subscription payment securely.": "Completing your HYBE subscription payment securely.",
+      "Form Submitted Successfully!": "Form Submitted Successfully!",
+      "Confirm Your Details": "Confirm Your Details",
+      "Please review your details before submitting:": "Please review your details before submitting:",
+      "Full Name": "Full Name",
+      "Email": "Email",
+      "Phone": "Phone",
+      "Country": "Country",
+      "DOB": "Date of Birth",
+      "Gender": "Gender",
+      "Branch": "Branch",
+      "Group": "Group",
+      "Artist": "Artist",
+      "Events": "Events",
+      "Payment": "Payment",
+      "Contact": "Contact",
+      "Edit": "Edit",
+      "Confirm & Submit": "Confirm & Submit",
+      "Submitting...": "Submitting...",
+      "Please wait while we finalize your submission.": "Please wait while we finalize your submission.",
+      "Redirecting to success page...": "Redirecting to success page...",
+      "Redirecting, please wait...": "Redirecting, please wait...",
+      "You will be redirected in": "You will be redirected in",
+      "Official HYBE Fan-Permit 2025/2026": "Official HYBE Fan-Permit 2025/2026",
+      "Join the Ultimate Fan Community": "Join the Ultimate Fan Community",
+      "Subscribe for exclusive access to HYBE artist updates, events, and merchandise.": "Subscribe for exclusive access to HYBE artist updates, events, and merchandise.",
+      "Our Culture: HYBE DNA": "Our Culture: HYBE DNA",
+      "Referral Code": "Referral Code",
+      "Enter referral code": "Enter referral code",
+      "Full Name ": "Full Name ",
+      "Enter your full legal name": "Enter your full legal name",
+      "Enter your email address": "Enter your email address",
+      "Zangi ID": "Zangi ID",
+      "Enter your Zangi ID (optional)": "Enter your Zangi ID (optional)",
+      "Phone Number": "Phone Number",
+      "Enter your phone number": "Enter your phone number",
+      "Address": "Address",
+      "Address Line 1": "Address Line 1",
+      "Address Line 2": "Address Line 2",
+      "City": "City",
+      "State/Province": "State/Province",
+      "Postal Code": "Postal Code",
+      "Use this address for mailing/delivery": "Use this address for mailing/delivery",
+      "Country ": "Country ",
+      "Select Country": "Select Country",
+      "Date of Birth": "Date of Birth",
+      "Select Gender": "Select Gender",
+      "Male": "Male",
+      "Female": "Female",
+      "Other": "Other",
+      "Prefer Not to Say": "Prefer Not to Say",
+      "Fan-To-Artist Preferences": "Fan-To-Artist Preferences",
+      "Select a HYBE Branch": "Select a HYBE Branch",
+      "Select Your Favorite Group": "Select Your Favorite Group",
+      "Select a Group": "Select a Group",
+      "Select Your Favorite Artist(s)": "Select Your Favorite Artist(s)",
+      "Select an Artist": "Select an Artist",
+      "Why Subscribe to the HYBE Fan-Permit?": "Why Subscribe to the HYBE Fan-Permit?",
+      "Standard vs Premium Membership": "Standard vs Premium Membership",
+      "Premium Membership includes:": "Premium Membership includes:",
+      "Limited availability:": "Limited availability:",
+      "Subscription Amount": "Subscription Amount",
+      "Select Payment Type": "Select Payment Type",
+      "Full Payment": "Full Payment",
+      "Installment": "Installment",
+      "Installment Plan": "Installment Plan",
+      "Select Installment Plan": "Select Installment Plan",
+      "Payment Methods": "Payment Methods",
+      "Card Payment": "Card Payment",
+      "Digital Currency": "Digital Currency",
+      "Bank Transfer": "Bank Transfer",
+      "Mobile Money": "Mobile Money",
+      "Cash": "Cash",
+      "(Unavailable)": "(Unavailable)",
+      "Select Upcoming Events": "Select Upcoming Events",
+      "Loading upcoming events...": "Loading upcoming events...",
+      "Failed to load events.": "Failed to load events.",
+      "Preferred Contact Method": "Preferred Contact Method",
+      "Via Email": "Via Email",
+      "Via SMS": "Via SMS",
+      "Feedback (Optional)": "Feedback (Optional)",
+      "Share your thoughts about the Fan-Permit": "Share your thoughts about the Fan-Permit",
+      "Agree to installment terms.": "Agree to installment terms.",
+      "Privacy Policy": "Privacy Policy",
+      "Terms of Service": "Terms of Service",
+      "Agree and complete subscription.": "Agree and complete subscription.",
+      "Submit Subscription": "Submit Subscription",
+      "Quick Links": "Quick Links",
+      "About Us": "About Us",
+      "Careers": "Careers",
+      "Contact Us": "Contact Us",
+      "Follow us:": "Follow us:",
+      "Empowering global K-pop innovation.": "Empowering global K-pop innovation."
+    },
+    ja: {
+      "🌐 Auto": "🌐 自動",
+      "Language": "言語",
+      "English": "英語",
+      "한국어": "韓国語",
+      "日本語": "日本語",
+      "Español": "スペイン語",
+      "Français": "フランス語",
+      "Deutsch": "ドイツ語",
+      "中文": "中国語",
+      "Welcome to HYBE's Fan-Permit!": "HYBE ファンパーミットへようこそ！",
+      "Gain exclusive access to artist events, official merchandise, and direct fan engagement. This form provides a secure and private channel for connecting with your favorite artists, in full compliance with Korean law. HYBE is committed to protecting the rights, privacy, and safety of all participants, ensuring legally compliant and authentic interactions. Learn more about our dedication to responsible fan-artist engagement and data security.": "アーティストイベント、公式グッズ、ファン参加特典に独占的にアクセスできます。このフォームは韓国法律を遵守し、お気に入りのアーティストと安全で非公開にコミュニケーションできるチャンネルを提供します。HYBE はすべての参加者の権利・個人情報・安全を保護し、責任あるファンとアーティストの交流とデータセキュリティに尽力しています。",
+      "Start Now": "今すぐ始める",
+      "Verify Your Email": "メール認証",
+      "Enter your email address to receive a verification code.": "認証コードを受け取るメールアドレスを入力してください。",
+      "Email Address": "メールアドレス",
+      "Send Verification Code": "認証コードを送信",
+      "Didn't receive the code? ": "コードが届きませんか？",
+      "Resend in ": "再送信まで",
+      "Enter the 6-digit code we sent to ": "送信した 6 桁のコードを入力してください：",
+      "Verification Code": "認証コード",
+      "Verify Code": "コードを確認",
+      "Use a different email": "別のメールアドレスを使用",
+      "Email Verified!": "メール認証完了！",
+      "Your email has been verified. You can now proceed with the form.": "メールが認証されました。フォームを続行できます。",
+      "Continue": "続ける",
+      "Verifying your answers, please wait...": "回答を確認中です。お待ちください...",
+      "Loading...": "読み込み中...",
+      "Processing payment...": "決済処理中...",
+      "You'll be redirected to our secure payment gateway in": "安全な決済ゲートウェイにリダイレクトされます",
+      "Please do not refresh or close this page.": "このページを更新または閉じないでください。",
+      "Completing your HYBE subscription payment securely.": "HYBE サブスクリプションの決済を安全に完了しています。",
+      "Form Submitted Successfully!": "フォームが正常に送信されました！",
+      "Confirm Your Details": "内容を確認",
+      "Please review your details before submitting:": "送信前に入力内容を確認してください：",
+      "Full Name": "氏名",
+      "Email": "メール",
+      "Phone": "電話番号",
+      "Country": "国",
+      "DOB": "生年月日",
+      "Gender": "性別",
+      "Branch": "ブランチ",
+      "Group": "グループ",
+      "Artist": "アーティスト",
+      "Events": "イベント",
+      "Payment": "支払い",
+      "Contact": "連絡先",
+      "Edit": "編集",
+      "Confirm & Submit": "確認して送信",
+      "Submitting...": "送信中...",
+      "Please wait while we finalize your submission.": "送信を完了するまでお待ちください。",
+      "Redirecting to success page...": "完了ページに移動中...",
+      "Redirecting, please wait...": "移動中です。お待ちください...",
+      "You will be redirected in": "秒後に移動します",
+      "Official HYBE Fan-Permit 2025/2026": "公式 HYBE ファンパーミット 2025/2026",
+      "Join the Ultimate Fan Community": "究極のファンコミュニティに参加",
+      "Subscribe for exclusive access to HYBE artist updates, events, and merchandise.": "HYBE アーティストのニュース、イベント、グッズを独占的に入手。",
+      "Our Culture: HYBE DNA": "私たちの文化：HYBE DNA",
+      "Referral Code": "紹介コード",
+      "Enter referral code": "紹介コードを入力",
+      "Full Name ": "氏名",
+      "Enter your full legal name": "法的な氏名を入力",
+      "Enter your email address": "メールアドレスを入力",
+      "Zangi ID": "Zangi ID",
+      "Enter your Zangi ID (optional)": "Zangi ID を入力（オプション）",
+      "Phone Number": "電話番号",
+      "Enter your phone number": "電話番号を入力",
+      "Address": "住所",
+      "Address Line 1": "住所 1",
+      "Address Line 2": "住所 2",
+      "City": "市区町村",
+      "State/Province": "都道府県",
+      "Postal Code": "郵便番号",
+      "Use this address for mailing/delivery": "この住所を配送先に使用",
+      "Country ": "国",
+      "Select Country": "国を選択",
+      "Date of Birth": "生年月日",
+      "Select Gender": "性別を選択",
+      "Male": "男性",
+      "Female": "女性",
+      "Other": "その他",
+      "Prefer Not to Say": "答えない",
+      "Fan-To-Artist Preferences": "ファン - アーティスト設定",
+      "Select a HYBE Branch": "HYBE ブランチを選択",
+      "Select Your Favorite Group": "お気に入りのグループを選択",
+      "Select a Group": "グループを選択",
+      "Select Your Favorite Artist(s)": "お気に入りのアーティストを選択",
+      "Select an Artist": "アーティストを選択",
+      "Why Subscribe to the HYBE Fan-Permit?": "なぜ HYBE ファンパーミットを購読するのか？",
+      "Standard vs Premium Membership": "スタンダードメンバーシップとプレミアムメンバーシップの比較",
+      "Premium Membership includes:": "プレミアムメンバーシップの特典：",
+      "Limited availability:": "数量限定：",
+      "Subscription Amount": "購読金額",
+      "Select Payment Type": "支払いタイプを選択",
+      "Full Payment": "一括払い",
+      "Installment": "分割払い",
+      "Installment Plan": "分割プラン",
+      "Select Installment Plan": "分割プランを選択",
+      "Payment Methods": "支払い方法",
+      "Card Payment": "カード支払い",
+      "Digital Currency": "デジタル通貨",
+      "Bank Transfer": "銀行振込",
+      "Mobile Money": "モバイルマネー",
+      "Cash": "現金",
+      "(Unavailable)": "（利用不可）",
+      "Select Upcoming Events": "予定イベントを選択",
+      "Loading upcoming events...": "予定イベントを読み込み中...",
+      "Failed to load events.": "イベントを読み込めませんでした。",
+      "Preferred Contact Method": "希望する連絡方法",
+      "Via Email": "メール",
+      "Via SMS": "SMS",
+      "Feedback (Optional)": "フィードバック（オプション）",
+      "Share your thoughts about the Fan-Permit": "ファンパーミットについての意見をお聞かせください",
+      "Agree to installment terms.": "分割規約に同意します。",
+      "Privacy Policy": "プライバシーポリシー",
+      "Terms of Service": "利用規約",
+      "Agree and complete subscription.": "同意して購読を完了します。",
+      "Submit Subscription": "購読を送信",
+      "Quick Links": "クイックリンク",
+      "About Us": "会社概要",
+      "Careers": "採用情報",
+      "Contact Us": "お問い合わせ",
+      "Follow us:": "フォローする：",
+      "Empowering global K-pop innovation.": "グローバル K-POP イノベーションを推進。"
     }
   };
 
   const languageNames = { en: "English", ko: "한국어", ja: "日本語", es: "Español", fr: "Français", de: "Deutsch", zh: "中文" };
   let activeLanguage = "ko";
+  let userAcceptedPrompt = false;
   const originalTextNodes = new WeakMap();
   const originalAttributes = new WeakMap();
 
@@ -271,8 +522,144 @@ if (typeof document !== "undefined") {
     return value.replace(source, translated);
   }
 
+  function detectBrowserLanguage() {
+    if (typeof navigator === 'undefined') return 'ko';
+    const browserLang = navigator.language.split('-')[0].toLowerCase();
+    return languageNames[browserLang] ? browserLang : 'ko';
+  }
+
+  function initializeLanguage() {
+    // Try IP detection first, then fall back to browser language
+    detectUserLanguageViaIP().then(ipLang => {
+      let detectedLang = ipLang || detectBrowserLanguage();
+      
+      // Only show prompt if not Korean and supported
+      if (detectedLang && detectedLang !== 'ko' && languageNames[detectedLang]) {
+        showLanguagePrompt(detectedLang);
+      }
+    });
+  }
+
+  async function detectUserLanguageViaIP() {
+    try {
+      // Use AbortController for timeout since fetch doesn't support timeout option directly
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 3000);
+      
+      const response = await fetch('https://ipapi.co/json/', { 
+        signal: controller.signal,
+        headers: { 'Accept': 'application/json' }
+      });
+      clearTimeout(timeoutId);
+      
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
+      }
+      
+      const data = await response.json();
+      const countryCode = data.country_code;
+      
+      // Map country codes to languages
+      const countryToLang = {
+        'US': 'en', 'GB': 'en', 'CA': 'en', 'AU': 'en', 'NZ': 'en', 'IE': 'en',
+        'JP': 'ja',
+        'CN': 'zh', 'TW': 'zh', 'HK': 'zh', 'SG': 'zh', 'MY': 'zh',
+        'KR': 'ko',
+        'ES': 'es', 'MX': 'es', 'AR': 'es', 'CO': 'es', 'CL': 'es', 'PE': 'es', 'VE': 'es',
+        'FR': 'fr', 'BE': 'fr', 'CH': 'fr', 'LU': 'fr',
+        'DE': 'de', 'AT': 'de', 'CH': 'de', 'LI': 'de',
+        'IT': 'it', 'SM': 'it', 'VA': 'it',
+        'PT': 'pt', 'BR': 'pt',
+        'RU': 'ru', 'UA': 'uk',
+        'NL': 'nl', 'BE': 'nl',
+        'SE': 'sv', 'NO': 'no', 'DK': 'da', 'FI': 'fi',
+        'PL': 'pl', 'CZ': 'cs', 'SK': 'sk',
+        'GR': 'el', 'TR': 'tr', 'IL': 'he', 'SA': 'ar', 'AE': 'ar',
+        'IN': 'hi', 'TH': 'th', 'VN': 'vi', 'ID': 'id', 'PH': 'tl'
+      };
+      
+      return countryToLang[countryCode] || null;
+    } catch (error) {
+      console.warn('IP language detection failed, using browser settings', error.message);
+      return null;
+    }
+  }
+
+  function showLanguagePrompt(detectedLang) {
+    // Check if user already has a saved preference
+    const storedPref = localStorage.getItem('hybe-language-prompt-accepted');
+    if (storedPref === 'true') {
+      return; // User already made a choice
+    }
+
+    const langName = languageNames[detectedLang] || detectedLang;
+    
+    // Create prompt modal dynamically
+    const promptHtml = `
+      <div class="modal fade" id="languagePromptModal" tabindex="-1" aria-labelledby="languagePromptModalLabel" role="dialog" aria-modal="true">
+        <div class="modal-dialog modal-dialog-centered">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title" id="languagePromptModalLabel">언어 변경 / Change Language</h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body text-center">
+              <p class="mb-3">
+                <strong>탐지된 언어: ${langName}</strong><br>
+                <span class="text-muted">Detected language: ${langName}</span>
+              </p>
+              <p>언어를 변경하시겠습니까?<br>Would you like to switch to your detected language?</p>
+            </div>
+            <div class="modal-footer justify-content-center">
+              <button type="button" class="btn btn-outline-secondary" id="lang-prompt-decline">한국어 유지<br>Keep Korean</button>
+              <button type="button" class="btn btn-primary" id="lang-prompt-accept">변경하기<br>Switch to ${langName}</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+
+    // Remove existing prompt modal if any
+    const existingPrompt = document.getElementById('languagePromptModal');
+    if (existingPrompt) existingPrompt.remove();
+
+    // Add prompt modal to body
+    document.body.insertAdjacentHTML('beforeend', promptHtml);
+
+    // Initialize and show modal
+    const promptModal = new bootstrap.Modal(document.getElementById('languagePromptModal'), {
+      backdrop: 'static',
+      keyboard: true
+    });
+
+    // Handle accept
+    document.getElementById('lang-prompt-accept').addEventListener('click', () => {
+      localStorage.setItem('hybe-language-prompt-accepted', 'true');
+      localStorage.setItem('hybe-language', detectedLang);
+      userAcceptedPrompt = true;
+      translatePage(detectedLang);
+      const selector = document.getElementById('language-switcher');
+      if (selector) selector.value = detectedLang;
+      promptModal.hide();
+    });
+
+    // Handle decline
+    document.getElementById('lang-prompt-decline').addEventListener('click', () => {
+      localStorage.setItem('hybe-language-prompt-accepted', 'true');
+      localStorage.setItem('hybe-language', 'ko');
+      promptModal.hide();
+    });
+
+    // Hide modal on close
+    document.getElementById('languagePromptModal').addEventListener('hidden.bs.modal', () => {
+      document.getElementById('languagePromptModal').remove();
+    });
+
+    promptModal.show();
+  }
+
   function translatePage(language) {
-    activeLanguage = language === "auto" ? detectLanguage() : language;
+    activeLanguage = language === "auto" ? detectBrowserLanguage() : language;
     document.documentElement.lang = activeLanguage;
     document.querySelectorAll("[data-i18n]").forEach((element) => {
       element.textContent = translations[activeLanguage]?.[element.dataset.i18n] || element.dataset.i18n;
@@ -303,19 +690,74 @@ if (typeof document !== "undefined") {
     return languageNames[browserLanguage] ? browserLanguage : "ko";
   }
 
-  document.addEventListener("DOMContentLoaded", () => {
+  document.addEventListener("DOMContentLoaded", async () => {
     const languageSelector = document.getElementById("language-switcher");
     const storedLanguage = localStorage.getItem("hybe-language");
+    const promptAccepted = localStorage.getItem("hybe-language-prompt-accepted");
+    
+    // Always start with Korean as default on page load
+    activeLanguage = "ko";
+    document.documentElement.lang = "ko";
+    
     if (languageSelector) {
       languageSelector.addEventListener("change", () => {
         const selectedLanguage = languageSelector.value;
-        if (selectedLanguage === "auto") localStorage.removeItem("hybe-language");
-        else localStorage.setItem("hybe-language", selectedLanguage);
-        translatePage(selectedLanguage);
+        if (selectedLanguage === "auto") {
+          localStorage.removeItem("hybe-language");
+          localStorage.removeItem("hybe-language-prompt-accepted");
+          // Re-run detection
+          initializeLanguage();
+        } else {
+          localStorage.setItem("hybe-language", selectedLanguage);
+          localStorage.setItem("hybe-language-prompt-accepted", "true");
+          translatePage(selectedLanguage);
+        }
       });
-      if (storedLanguage && languageNames[storedLanguage]) languageSelector.value = storedLanguage;
+      
+      // Restore user preference if exists
+      if (storedLanguage && languageNames[storedLanguage]) {
+        languageSelector.value = storedLanguage;
+        activeLanguage = storedLanguage;
+        document.documentElement.lang = storedLanguage;
+        translatePage(storedLanguage);
+      }
     }
-    translatePage(storedLanguage || "auto");
+    
+    // Listen for language changes from the new i18n system
+    window.addEventListener('languageChanged', (event) => {
+      const newLang = event.detail.lang;
+      if (newLang && newLang !== activeLanguage) {
+        activeLanguage = newLang;
+        if (languageSelector) {
+          languageSelector.value = newLang;
+        }
+        translatePage(newLang);
+      }
+    });
+    
+    // Only show language prompt if user hasn't already made a choice
+    // The new i18n/index.js handles detection and prompting automatically
+    // This is a fallback for backward compatibility
+    if (promptAccepted !== 'true' && !storedLanguage) {
+      // Try IP detection first (more accurate for country-based targeting)
+      let detectedLang = await detectUserLanguageViaIP();
+      
+      // If IP detection fails or returns null, fall back to browser language
+      if (!detectedLang) {
+        detectedLang = detectBrowserLanguage();
+      }
+      
+      // Show prompt only if detected language is not Korean and is supported
+      // Note: The new i18n system will handle this, so we skip if it already did
+      if (detectedLang && detectedLang !== 'ko' && languageNames[detectedLang]) {
+        // Check if the new system already showed the prompt
+        const newSystemPromptShown = localStorage.getItem('hybe_preferred_language');
+        if (!newSystemPromptShown) {
+          showLanguagePrompt(detectedLang);
+        }
+      }
+    }
+    
     const translationObserver = new MutationObserver(() => translatePage(activeLanguage));
     translationObserver.observe(document.body, { childList: true, subtree: true });
 
