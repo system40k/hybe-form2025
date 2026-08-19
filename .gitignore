@@ -1,26 +1,29 @@
+```
 # Dependencies
 node_modules/
 
-# Build output
-dist/
+# Logs and temp files
+*.log
+*.tmp
 
-# Environment files
+# Environment
 .env
+.env.local
 .env.*
-!.env.example
 
-# Logs
-npm-debug.log*
-yarn-error.log
-pnpm-debug.log*
-
-# OS / Editor
-.DS_Store
-Thumbs.db
-*.swp
-*.swo
+# Editors
 .vscode/
 .idea/
 
-# Netlify local build/cache
-.netlify/
+# Test coverage
+coverage/
+htmlcov/
+*.coverage
+
+# Prettier cache
+.prettier-cache
+
+# Playwright
+playwright/.cache/
+playwright/test-results/
+```

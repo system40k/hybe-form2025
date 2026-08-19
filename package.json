@@ -1,13 +1,16 @@
 {
   "name": "hybe-form-client",
   "version": "1.0.0",
-  "description": "HYBE Fan-Permit Frontend",
+  "description": "HYBE Fan-Permit Frontend with Email OTP Verification",
   "main": "server.js",
+  "type": "module",
   "scripts": {
     "start": "node server.js",
     "dev": "vite build --watch & node server.js",
     "build": "vite build",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "format": "prettier --write \"**/*.{js,html,css,json,md}\"",
+    "test:e2e": "playwright test tests/"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.39.0",
@@ -19,6 +22,7 @@
     "ws": "^8.21.0"
   },
   "devDependencies": {
+    "@playwright/test": "^1.62.1",
     "eslint": "^9.36.0",
     "prettier": "^3.6.2",
     "vite": "^6.3.6"
