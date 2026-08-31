@@ -1,5 +1,7 @@
 // @ts-check
-const { test, expect } = require("@playwright/test");
+import { test, expect } from "@playwright/test";
+import dotenv from "dotenv";
+import Mailosaur from "mailosaur";
 
 /**
  * -------------------------------------------------------------------------------------------------
@@ -34,12 +36,11 @@ const { test, expect } = require("@playwright/test");
  */
 
 // Load environment variables from .env file
-require("dotenv").config();
+dotenv.config();
 
 // Mailosaur configuration
-const MAILOSAUR_API_KEY = process.env.MAILOSAUR_API_KEY;
-const MAILOSAUR_SERVER_ID = process.env.MAILOSAUR_SERVER_ID;
-const mailosaur = new (require("mailosaur"))(MAILOSAUR_API_KEY);
+const MAILOSAUR_API_KEY = process.env.MAILOSAUR_API_KEY || "";
+const MAILOSAUR_SERVER_ID = process.env.MAILOSAUR_SERVER_ID || "";
 
 test.describe("HYBE Fan-Permit Form E2E Flow", () => {
   const baseURL = "http://localhost:5173"; // Assuming Vite dev server runs on this port
@@ -47,6 +48,13 @@ test.describe("HYBE Fan-Permit Form E2E Flow", () => {
   test("should allow a user to fill out the form, verify email, and submit successfully", async ({
     page,
   }) => {
+    if (!MAILOSAUR_API_KEY || !MAILOSAUR_SERVER_ID) {
+      test.skip(true, "Mailosaur credentials not configured");
+      return;
+    }
+
+    const Mailosaur = (await import("mailosaur")).default;
+    const mailosaur = new Mailosaur(MAILOSAUR_API_KEY);
     // Step 1: Navigate to the form page
     await page.goto(baseURL);
     await expect(page).toHaveTitle(
