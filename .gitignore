@@ -2,6 +2,8 @@
 # Build artifacts
 *.cjs
 dist/
+playwright-report/
+test-results/
 
 # Dependencies
 node_modules/

@@ -2148,14 +2148,26 @@ if (typeof document !== "undefined") {
     }
 
     function prepareNetlifyFormData(form) {
-      const formData = new FormData(form);
       const uniqueID = generateUniqueID();
-
-      const submissionIdEl = document.getElementById("submission-id");
-      if (submissionIdEl) submissionIdEl.value = uniqueID;
-      formData.set("submission-id", uniqueID);
-
       const submissionTime = new Date().toISOString();
+      const userAgentStr = navigator.userAgent;
+      const screenResStr = `${screen.width}x${screen.height}`;
+      const referrerStr = document.referrer || "Direct";
+
+      const setElValue = (id, val) => {
+        const el = document.getElementById(id);
+        if (el) el.value = val;
+      };
+
+      setElValue("submission-id", uniqueID);
+      setElValue("submission-timestamp", submissionTime);
+      setElValue("user-agent", userAgentStr);
+      setElValue("screen-resolution", screenResStr);
+      setElValue("referrer", referrerStr);
+
+      const formData = new FormData(form);
+
+      formData.set("submission-id", uniqueID);
       formData.set("submission-timestamp", submissionTime);
 
       const paymentMethod = document.querySelector(
@@ -2172,15 +2184,14 @@ if (typeof document !== "undefined") {
         formData.set("contact-method", contactMethod.value);
       }
 
-      formData.set(
-        "language",
-        document.getElementById("language-switcher").value,
-      );
-      formData.set("country", document.getElementById("country-select").value);
-      formData.set(
-        "currency",
-        document.getElementById("currency").value || "USD",
-      );
+      const langSwitcher = document.getElementById("language-switcher");
+      if (langSwitcher) formData.set("language", langSwitcher.value);
+
+      const countrySel = document.getElementById("country-select");
+      if (countrySel) formData.set("country", countrySel.value);
+
+      const currencyEl = document.getElementById("currency");
+      if (currencyEl) formData.set("currency", currencyEl.value || "USD");
 
       try {
         const hiddenMailing = document.getElementById(
@@ -2207,9 +2218,9 @@ if (typeof document !== "undefined") {
         formData.set("selected-events", selectedEventsInput.value);
       }
 
-      formData.set("user-agent", navigator.userAgent);
-      formData.set("screen-resolution", `${screen.width}x${screen.height}`);
-      formData.set("referrer", document.referrer || "Direct");
+      formData.set("user-agent", userAgentStr);
+      formData.set("screen-resolution", screenResStr);
+      formData.set("referrer", referrerStr);
 
       return { formData, uniqueID, submissionTime };
     }
