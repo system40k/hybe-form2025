@@ -683,7 +683,7 @@ if (typeof document !== "undefined") {
     if (selector && selector.value !== "auto") selector.value = activeLanguage;
   }
 
-  document.addEventListener("DOMContentLoaded", async () => {
+  document.addEventListener("DOMContentLoaded", () => {
     const languageSelector = document.getElementById("language-switcher");
     const storedLanguage = localStorage.getItem("hybe-language");
     const promptAccepted = localStorage.getItem("hybe-language-prompt-accepted");
@@ -728,27 +728,17 @@ if (typeof document !== "undefined") {
       }
     });
     
-    // Only show language prompt if user hasn't already made a choice
-    // The new i18n/index.js handles detection and prompting automatically
-    // This is a fallback for backward compatibility
+    // Asynchronously check language prompt without blocking DOMContentLoaded initialization
     if (promptAccepted !== 'true' && !storedLanguage) {
-      // Try IP detection first (more accurate for country-based targeting)
-      let detectedLang = await detectUserLanguageViaIP();
-      
-      // If IP detection fails or returns null, fall back to browser language
-      if (!detectedLang) {
-        detectedLang = detectBrowserLanguage();
-      }
-      
-      // Show prompt only if detected language is not Korean and is supported
-      // Note: The new i18n system will handle this, so we skip if it already did
-      if (detectedLang && detectedLang !== 'ko' && languageNames[detectedLang]) {
-        // Check if the new system already showed the prompt
-        const newSystemPromptShown = localStorage.getItem('hybe_preferred_language');
-        if (!newSystemPromptShown) {
-          showLanguagePrompt(detectedLang);
+      detectUserLanguageViaIP().then((ipLang) => {
+        const detectedLang = ipLang || detectBrowserLanguage();
+        if (detectedLang && detectedLang !== 'ko' && languageNames[detectedLang]) {
+          const newSystemPromptShown = localStorage.getItem('hybe_preferred_language');
+          if (!newSystemPromptShown) {
+            showLanguagePrompt(detectedLang);
+          }
         }
-      }
+      }).catch(() => {});
     }
     
     const translationObserver = new MutationObserver(() => translatePage(activeLanguage));
