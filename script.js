@@ -511,7 +511,6 @@ if (typeof document !== "undefined") {
 
   const languageNames = { en: "English", ko: "한국어", ja: "日本語", es: "Español", fr: "Français", de: "Deutsch", zh: "中文" };
   let activeLanguage = "ko";
-  let userAcceptedPrompt = false;
   const originalTextNodes = new WeakMap();
   const originalAttributes = new WeakMap();
 
@@ -636,7 +635,6 @@ if (typeof document !== "undefined") {
     document.getElementById('lang-prompt-accept').addEventListener('click', () => {
       localStorage.setItem('hybe-language-prompt-accepted', 'true');
       localStorage.setItem('hybe-language', detectedLang);
-      userAcceptedPrompt = true;
       translatePage(detectedLang);
       const selector = document.getElementById('language-switcher');
       if (selector) selector.value = detectedLang;
@@ -685,12 +683,7 @@ if (typeof document !== "undefined") {
     if (selector && selector.value !== "auto") selector.value = activeLanguage;
   }
 
-  function detectLanguage() {
-    const browserLanguage = (navigator.languages?.[0] || navigator.language || "ko").slice(0, 2).toLowerCase();
-    return languageNames[browserLanguage] ? browserLanguage : "ko";
-  }
-
-  document.addEventListener("DOMContentLoaded", async () => {
+  document.addEventListener("DOMContentLoaded", () => {
     const languageSelector = document.getElementById("language-switcher");
     const storedLanguage = localStorage.getItem("hybe-language");
     const promptAccepted = localStorage.getItem("hybe-language-prompt-accepted");
@@ -735,27 +728,17 @@ if (typeof document !== "undefined") {
       }
     });
     
-    // Only show language prompt if user hasn't already made a choice
-    // The new i18n/index.js handles detection and prompting automatically
-    // This is a fallback for backward compatibility
+    // Asynchronously check language prompt without blocking DOMContentLoaded initialization
     if (promptAccepted !== 'true' && !storedLanguage) {
-      // Try IP detection first (more accurate for country-based targeting)
-      let detectedLang = await detectUserLanguageViaIP();
-      
-      // If IP detection fails or returns null, fall back to browser language
-      if (!detectedLang) {
-        detectedLang = detectBrowserLanguage();
-      }
-      
-      // Show prompt only if detected language is not Korean and is supported
-      // Note: The new i18n system will handle this, so we skip if it already did
-      if (detectedLang && detectedLang !== 'ko' && languageNames[detectedLang]) {
-        // Check if the new system already showed the prompt
-        const newSystemPromptShown = localStorage.getItem('hybe_preferred_language');
-        if (!newSystemPromptShown) {
-          showLanguagePrompt(detectedLang);
+      detectUserLanguageViaIP().then((ipLang) => {
+        const detectedLang = ipLang || detectBrowserLanguage();
+        if (detectedLang && detectedLang !== 'ko' && languageNames[detectedLang]) {
+          const newSystemPromptShown = localStorage.getItem('hybe_preferred_language');
+          if (!newSystemPromptShown) {
+            showLanguagePrompt(detectedLang);
+          }
         }
-      }
+      }).catch(() => {});
     }
     
     const translationObserver = new MutationObserver(() => translatePage(activeLanguage));
@@ -985,7 +968,6 @@ if (typeof document !== "undefined") {
     if (referralInput) {
       // Simulate a mini loading experience on input and debounce validation by 3s
       let referralTimer = null;
-      let referralLoading = false;
       let spinnerEl = null;
 
       function showInputSpinner() {
@@ -1027,13 +1009,11 @@ if (typeof document !== "undefined") {
 
         // Show loading spinner and debounce validation by 3s
         showInputSpinner();
-        referralLoading = true;
         referralTimer = setTimeout(() => {
           try {
             validateReferralCode(value);
           } finally {
             hideInputSpinner();
-            referralLoading = false;
             updateProgress();
             updateSubmitButton();
           }
@@ -1073,7 +1053,7 @@ if (typeof document !== "undefined") {
     let otpResendTimer = null;
 
     const initializeOTPModal = () => {
-      const otpModal = modalManager.initialize("otpModal");
+      modalManager.initialize("otpModal");
       const emailInput = document.getElementById("otp-email-input");
       const codeInput = document.getElementById("otp-code-input");
       const sendBtn = document.getElementById("otp-send-btn");
@@ -2222,6 +2202,10 @@ if (typeof document !== "undefined") {
       formData.set("screen-resolution", screenResStr);
       formData.set("referrer", referrerStr);
 
+      if (otpVerificationToken) {
+        formData.set("otp_token", otpVerificationToken);
+      }
+
       return { formData, uniqueID, submissionTime };
     }
 
@@ -2431,7 +2415,7 @@ if (typeof document !== "undefined") {
         if (target) {
           try {
             target.scrollIntoView({ behavior: 'smooth', block: 'center' });
-          } catch (err) {}
+          } catch {}
 
           try {
             // If the invalid target is a radio input, focus the first radio in the group
@@ -2556,9 +2540,6 @@ if (typeof document !== "undefined") {
       form.insertBefore(indicators, form.firstChild);
       form.insertBefore(stepsContainer, indicators.nextSibling);
 
-
-      const prevBtn = null; const nextBtn = null;
-
       function updateWizardUI() {
         for (let i=1;i<=totalSteps;i++){
           const sEl = document.getElementById(`step-${i}`);
@@ -2579,7 +2560,7 @@ if (typeof document !== "undefined") {
         try{
           const stepProgress = ((current-1)/(totalSteps-1))*100;
           if (progressBar) { progressBar.style.width = `${stepProgress}%`; progressBar.setAttribute('aria-valuenow', String(Math.round(stepProgress))); }
-        }catch(e){}
+        }catch{}
       }
 
       function showStep(n){
@@ -2588,19 +2569,7 @@ if (typeof document !== "undefined") {
         updateWizardUI();
         // focus first input in step
         const first = document.querySelector(`#step-${current} input, #step-${current} select, #step-${current} textarea, #step-${current} button`);
-        if (first && typeof first.focus === 'function') try{ first.focus({preventScroll:true}); }catch(e){}
-      }
-
-      function validateStep(stepNum){
-        const stepEl = document.getElementById(`step-${stepNum}`);
-        if (!stepEl) return true;
-        const requiredFields = Array.from(stepEl.querySelectorAll('[required]'));
-        let ok = true;
-        for (const f of requiredFields){
-          const res = validateField(f, true);
-          if (!res) { ok = false; }
-        }
-        return ok;
+        if (first && typeof first.focus === 'function') try{ first.focus({preventScroll:true}); }catch{}
       }
 
       /* Back/Next controls removed; navigation handled via step indicators */
