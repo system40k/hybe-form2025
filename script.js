@@ -1043,14 +1043,15 @@ if (typeof document !== "undefined") {
     const confirmModal = modalManager.initialize("confirmModal");
     const confirmBtn = document.getElementById("confirm-submit-btn");
 
-    // Submission guards to ensure form is only submitted after explicit confirmation
-    let confirmModalShown = false;
-    let submissionConfirmed = false;
-
-    // OTP Verification Handler
+    // Retained only for compatibility with the legacy handler below; OTP is no
+    // longer initialized or used by the form.
     let otpVerificationToken = null;
     let otpVerifiedEmail = null;
     let otpResendTimer = null;
+
+    // Submission guards to ensure form is only submitted after explicit confirmation
+    let confirmModalShown = false;
+    let submissionConfirmed = false;
 
     const initializeOTPModal = () => {
       modalManager.initialize("otpModal");
@@ -1253,8 +1254,6 @@ if (typeof document !== "undefined") {
       }
     };
 
-    initializeOTPModal();
-
     const branches = [
       { name: "BigHit Music", groups: ["BTS", "TXT"] },
       { name: "PLEDIS Entertainment", groups: ["SEVENTEEN", "fromis_9"] },
@@ -1328,8 +1327,44 @@ if (typeof document !== "undefined") {
     };
     async function populateCountries() {
       if (!countrySelect) return;
+
+      const fallbackCountries = [
+        ["KR", "South Korea", "+82"],
+        ["US", "United States", "+1"],
+        ["CA", "Canada", "+1"],
+        ["GB", "United Kingdom", "+44"],
+        ["JP", "Japan", "+81"],
+        ["CN", "China", "+86"],
+        ["AU", "Australia", "+61"],
+        ["DE", "Germany", "+49"],
+        ["FR", "France", "+33"],
+        ["ES", "Spain", "+34"],
+        ["BR", "Brazil", "+55"],
+        ["IN", "India", "+91"],
+      ];
+      const addCountry = (code2, name, dialCode) => {
+        if (!code2 || countryPhoneData[code2]) return;
+        const opt = document.createElement("option");
+        opt.value = code2;
+        opt.textContent = name;
+        countrySelect.appendChild(opt);
+        countryPhoneData[code2] = {
+          flag: countryCodeToFlagEmoji(code2),
+          code: dialCode || "",
+          format: "",
+        };
+      };
+
+      fallbackCountries.forEach(([code, name, dial]) => addCountry(code, name, dial));
+      countrySelect.dispatchEvent(new Event("change"));
+
       try {
-        const res = await fetch("https://restcountries.com/v3.1/all?fields=name,cca2,idd");
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 2500);
+        const res = await fetch("https://restcountries.com/v3.1/all?fields=name,cca2,idd", {
+          signal: controller.signal,
+        });
+        clearTimeout(timeoutId);
         const json = await res.json();
         const countries = Array.isArray(json) ? json : [];
         countries
@@ -1347,13 +1382,7 @@ if (typeof document !== "undefined") {
           })
           .filter((c) => c.name && c.code2)
           .sort((a, b) => a.name.localeCompare(b.name))
-          .forEach((c) => {
-            const opt = document.createElement("option");
-            opt.value = c.code2;
-            opt.textContent = c.name;
-            countrySelect.appendChild(opt);
-            countryPhoneData[c.code2] = { flag: c.flag, code: c.dialCode, format: "" };
-          });
+          .forEach((c) => addCountry(c.code2, c.name, c.dialCode));
 
         try {
           const ipRes = await fetch("https://ipwho.is/");
@@ -1958,12 +1987,6 @@ if (typeof document !== "undefined") {
         },
       };
       const format = addressFormats[countryCode] || addressFormats.default;
-      try {
-        format.fields.forEach((field) => {
-          field.pattern = null;
-          field.error = "";
-        });
-      } catch {}
       format.fields.forEach((f) => {
         const el = document.getElementById(f.id);
         if (el) {
@@ -2201,10 +2224,6 @@ if (typeof document !== "undefined") {
       formData.set("user-agent", userAgentStr);
       formData.set("screen-resolution", screenResStr);
       formData.set("referrer", referrerStr);
-
-      if (otpVerificationToken) {
-        formData.set("otp_token", otpVerificationToken);
-      }
 
       return { formData, uniqueID, submissionTime };
     }
@@ -2455,12 +2474,12 @@ if (typeof document !== "undefined") {
     }
 
     try {
-      const onboardingModalInstance = modalManager.initialize("onboardingModal");
+      modalManager.initialize("onboardingModal");
       const startBtn = document.getElementById('start-now-btn');
       if (startBtn) startBtn.addEventListener('click', () => {
         try { document.getElementById('subscription-form').scrollIntoView({ behavior: 'smooth' }); } catch {}
       });
-      if (onboardingModalInstance) modalManager.show('onboardingModal');
+      // Do not block the form with an automatic modal on initial load.
     } catch {}
 
     // Create and initialize a lightweight 5-step wizard grouping existing fields
@@ -2475,6 +2494,7 @@ if (typeof document !== "undefined") {
       const findWrapper = (el) => {
         if (!el) return null;
         if (typeof el.closest === 'function' && el.closest('.mb-3')) return el.closest('.mb-3');
+        if (el.parentElement === form) return null;
         return el.parentElement || el;
       };
 
