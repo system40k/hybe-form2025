@@ -1043,8 +1043,8 @@ if (typeof document !== "undefined") {
     const confirmModal = modalManager.initialize("confirmModal");
     const confirmBtn = document.getElementById("confirm-submit-btn");
 
-    // Retained only for compatibility with the legacy handler below; OTP is no
-    // longer initialized or used by the form.
+    // Email OTP verification state. The submission flow gates on a verified
+    // email address before the review/confirm step is shown.
     let otpVerificationToken = null;
     let otpVerifiedEmail = null;
     let otpResendTimer = null;
@@ -1142,7 +1142,7 @@ if (typeof document !== "undefined") {
             const data = await response.json();
 
             if (data.success) {
-              otpVerifiedEmail = email;
+              otpVerifiedEmail = email.trim().toLowerCase();
               document.getElementById("otp-display-email").textContent = email;
               showOTPStep("code");
               startResendTimer();
@@ -1232,6 +1232,7 @@ if (typeof document !== "undefined") {
         continueBtn.addEventListener("click", () => {
           if (otpResendTimer) clearInterval(otpResendTimer);
           modalManager.hide("otpModal");
+          resumeAfterOTPVerification();
         });
       }
 
@@ -1253,6 +1254,8 @@ if (typeof document !== "undefined") {
         });
       }
     };
+
+    initializeOTPModal();
 
     const branches = [
       { name: "BigHit Music", groups: ["BTS", "TXT"] },
@@ -2225,6 +2228,10 @@ if (typeof document !== "undefined") {
       formData.set("screen-resolution", screenResStr);
       formData.set("referrer", referrerStr);
 
+      if (otpVerificationToken) {
+        formData.set("otp_token", otpVerificationToken);
+      }
+
       return { formData, uniqueID, submissionTime };
     }
 
@@ -2322,7 +2329,9 @@ if (typeof document !== "undefined") {
           throw new Error("All submission attempts failed");
         }
 
-        sessionStorage.setItem("submissionData", JSON.stringify(payload));
+        // The OTP capability token must never be persisted client-side
+        const { otp_token: _otpToken, ...storedPayload } = payload;
+        sessionStorage.setItem("submissionData", JSON.stringify(storedPayload));
         // Reset confirmation state to avoid accidental re-submits
         submissionConfirmed = false;
         confirmModalShown = false;
@@ -2353,6 +2362,108 @@ if (typeof document !== "undefined") {
         if (btnText) btnText.textContent = "Submit Subscription";
       }
     }
+
+    // ---- Email verification gate helpers --------------------------------
+    const OTP_TOKEN_MAX_AGE_MS = 25 * 60 * 1000; // signed tokens expire server-side after 30 min
+
+    function decodeOtpTokenPayload(token) {
+      try {
+        const payloadPart = String(token || "").split(".")[0];
+        if (!payloadPart) return null;
+        const json = atob(payloadPart.replace(/-/g, "+").replace(/_/g, "/"));
+        const parsed = JSON.parse(json);
+        return parsed && typeof parsed === "object" ? parsed : null;
+      } catch {
+        return null;
+      }
+    }
+
+    function clearOTPModalState() {
+      if (otpResendTimer) {
+        clearInterval(otpResendTimer);
+        otpResendTimer = null;
+      }
+      ["otp-email-error", "otp-code-error", "otp-send-message", "otp-verify-message"].forEach(
+        (id) => {
+          const el = document.getElementById(id);
+          if (el) el.classList.add("d-none");
+        },
+      );
+      const resendWrapper = document.getElementById("otp-resend-wrapper");
+      if (resendWrapper) resendWrapper.classList.add("d-none");
+      const codeInput = document.getElementById("otp-code-input");
+      if (codeInput) codeInput.value = "";
+    }
+
+    function showOTPStepByName(step) {
+      const toggle = (id, show) => {
+        const el = document.getElementById(id);
+        if (el) el.classList.toggle("d-none", !show);
+      };
+      toggle("otp-email-step", step === "email");
+      toggle("otp-code-step", step === "code");
+      toggle("otp-success-step", step === "success");
+    }
+
+    function openOTPVerification(prefillEmail) {
+      const otpInput = document.getElementById("otp-email-input");
+      clearOTPModalState();
+      showOTPStepByName("email");
+      if (otpInput) {
+        otpInput.value = prefillEmail || "";
+        otpInput.focus();
+      }
+      modalManager.show("otpModal");
+    }
+
+    function isEmailOTPVerifiedFor(formEmail) {
+      const email = String(formEmail || "").trim().toLowerCase();
+      if (!email || !otpVerifiedEmail || otpVerifiedEmail !== email || !otpVerificationToken) {
+        return false;
+      }
+      const payload = decodeOtpTokenPayload(otpVerificationToken);
+      const issuedSec = payload ? Number(payload.iat) : 0;
+      return issuedSec > 0 && Date.now() - issuedSec * 1000 < OTP_TOKEN_MAX_AGE_MS;
+    }
+
+    function requestEmailVerification() {
+      const formEmail = (emailInput?.value || "").trim().toLowerCase();
+      if (isEmailOTPVerifiedFor(formEmail)) return true;
+      openOTPVerification(formEmail);
+      showToast(
+        "Please verify your email address with the one-time code before continuing.",
+        "warning",
+      );
+      return false;
+    }
+
+    function resumeAfterOTPVerification() {
+      const formEmail = (emailInput?.value || "").trim().toLowerCase();
+      if (!isEmailOTPVerifiedFor(formEmail)) {
+        showToast(
+          "Your verified email no longer matches the form email. Please verify again.",
+          "warning",
+        );
+        openOTPVerification(formEmail);
+        return;
+      }
+      fillConfirmDetails();
+      modalManager.show("confirmModal");
+      confirmModalShown = true;
+      submissionConfirmed = false;
+    }
+
+    // Drop verification state when the form email field changes
+    if (emailInput) {
+      emailInput.addEventListener("input", () => {
+        const current = emailInput.value.trim().toLowerCase();
+        if (otpVerifiedEmail && otpVerifiedEmail !== current) {
+          otpVerificationToken = null;
+          otpVerifiedEmail = null;
+        }
+      });
+    }
+    // --------------------------------------------------------------------
 
     function fillConfirmDetails() {
       const get = (id) => document.getElementById(id);
@@ -2454,6 +2565,11 @@ if (typeof document !== "undefined") {
           shakeField(target);
         }
 
+        return;
+      }
+
+      // Enforce email OTP verification before showing the review step
+      if (!requestEmailVerification()) {
         return;
       }
 

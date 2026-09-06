@@ -936,3 +936,17 @@ footer a[lang="ko"] {
 #events-error {
   padding: 1rem;
 }
+
+/* success.html summary-card presentation (moved out of inline <style> so the page
+   ships without inline CSS/JS and can enforce a strict Content-Security-Policy) */
+.summary-card {
+  border-left: 5px solid #6a11cb;
+}
+.summary-key {
+  font-weight: 600;
+  color: #555;
+}
+.summary-value {
+  color: #333;
+}
+

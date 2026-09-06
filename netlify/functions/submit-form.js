@@ -1,7 +1,23 @@
 // Netlify Function: submit-form
-// Handles subscription form submission with basic sanitization and validation.
+// Receives the validated subscription form payload from the SPA and enforces
+// the email-verification gate server side.
+//
+// Hardening applied:
+//  - otp_token is now REQUIRED (previously optional / trivially forgeable)
+//  - Token is HMAC-SHA256 signed (OTP_SIGNING_SECRET) with iat/exp claims
+//  - Token email must match the submission email (normalized)
+//  - Cross-checked against the otp_verifications row (verified == true) so a
+//    stolen token is useless without the corresponding verified database state
+//  - Fails closed when signing config or the database is unavailable
+//  - Security headers + Cache-Control: no-store on every response
+//
+// Persistence note: durable capture is handled by the Netlify Forms POST to
+// "/" (form-name=subscription-form); this endpoint is the async validation
+// layer and is intentionally non-destructive.
 
-// Complete HYBE Referral Code List
+import crypto from "crypto";
+import { createClient } from "@supabase/supabase-js";
+
 const referralCodeMap = {
   // BTS
   HYBE2025: "BTS (Group)",
@@ -83,6 +99,66 @@ const referralCodeMap = {
   MAKITEAM: "MAKI",
 };
 
+function requireEnv(name) {
+  const v = process.env[name];
+  if (!v) throw new Error(`Missing required env var: ${name}`);
+  return v;
+}
+
+function securityHeaders() {
+  return {
+    "Content-Type": "application/json",
+    "X-Content-Type-Options": "nosniff",
+    "X-Frame-Options": "DENY",
+    "Referrer-Policy": "strict-origin-when-cross-origin",
+    "Permissions-Policy": "camera=(), microphone=(), geolocation=()",
+    "Cache-Control": "no-store",
+  };
+}
+
+function json(statusCode, obj) {
+  return { statusCode, headers: securityHeaders(), body: JSON.stringify(obj) };
+}
+
+function normalizeEmail(email) {
+  return String(email || "").trim().toLowerCase();
+}
+
+function signPayload(payloadB64, secret) {
+  return crypto
+    .createHmac("sha256", secret)
+    .update(payloadB64)
+    .digest("hex");
+}
+
+function timingSafeHexEqual(a, b) {
+  const ba = Buffer.from(String(a), "hex");
+  const bb = Buffer.from(String(b), "hex");
+  if (ba.length !== bb.length) return false;
+  return crypto.timingSafeEqual(ba, bb);
+}
+
+// Returns the decoded payload when the token is authentic and unexpired,
+// otherwise null.
+function verifyToken(token) {
+  if (typeof token !== "string" || !token.includes(".")) return null;
+  const [payloadB64, sig] = token.split(".");
+  if (!payloadB64 || !sig) return null;
+  const expected = signPayload(payloadB64, requireEnv("OTP_SIGNING_SECRET"));
+  if (!timingSafeHexEqual(expected, sig)) return null;
+  try {
+    const payload = JSON.parse(
+      Buffer.from(payloadB64.replace(/-/g, "+").replace(/_/g, "/"), "base64").toString("utf8"),
+    );
+    if (!payload || payload.verified !== true) return null;
+    const expSec = Number(payload.exp);
+    if (!expSec || expSec * 1000 < Date.now()) return null;
+    return payload;
+  } catch {
+    return null;
+  }
+}
+
 function sanitizeInput(input) {
   if (typeof input !== "string") return input;
   return input
@@ -106,6 +182,7 @@ function validate(data) {
   }
 
   if (!data["full-name"]) errors.push("Missing required field: full-name");
+  if (String(data["full-name"] || "").length > 120) errors.push("full-name exceeds maximum length");
   if (!data.email) errors.push("Missing required field: email");
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   if (data.email && !emailRegex.test(String(data.email))) {
@@ -114,31 +191,17 @@ function validate(data) {
   return errors;
 }
 
-exports.handler = async (event) => {
+
+export const handler = async (event) => {
   if (event.httpMethod !== "POST") {
-    return {
-      statusCode: 405,
-      headers: {
-        "Content-Type": "application/json",
-        "X-Content-Type-Options": "nosniff",
-        "X-Frame-Options": "DENY",
-        "X-XSS-Protection": "1; mode=block",
-        "Referrer-Policy": "strict-origin-when-cross-origin",
-        "Permissions-Policy": "camera=(), microphone=(), geolocation=()",
-      },
-      body: JSON.stringify({ success: false, message: "Method Not Allowed" }),
-    };
+    return json(405, { success: false, message: "Method Not Allowed" });
   }
 
   let body = {};
   try {
     body = JSON.parse(event.body || "{}");
   } catch {
-    return {
-      statusCode: 400,
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ success: false, message: "Invalid JSON body" }),
-    };
+    return json(400, { success: false, message: "Invalid JSON body" });
   }
 
   // Sanitize inputs
@@ -150,50 +213,67 @@ exports.handler = async (event) => {
   // Validate
   const errors = validate(sanitized);
   if (errors.length) {
-    return {
-      statusCode: 400,
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ success: false, message: errors.join(", ") }),
-    };
+    return json(400, { success: false, message: errors.join(", ") });
   }
 
-  // Verify OTP token if provided
-  if (sanitized.otp_token) {
-    try {
-      const decoded = JSON.parse(Buffer.from(sanitized.otp_token, "base64").toString());
-      if (decoded.email !== sanitized.email || !decoded.verified) {
-        return {
-          statusCode: 401,
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ success: false, message: "Invalid or expired verification token" }),
-        };
-      }
-    } catch (e) {
-      return {
-        statusCode: 401,
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ success: false, message: "Invalid verification token" }),
-      };
+  try {
+    // The signed verification token is mandatory for every submission.
+    const token = sanitized.otp_token;
+    const payload = verifyToken(token);
+    if (!payload) {
+      return json(401, {
+        success: false,
+        message: "A valid, unexpired email verification token is required.",
+      });
     }
+
+    const submissionEmail = normalizeEmail(sanitized.email);
+    if (normalizeEmail(payload.email) !== submissionEmail) {
+      return json(401, {
+        success: false,
+        message: "Verification token does not match the submission email.",
+      });
+    }
+
+    // Cross-check server state: the email must actually be verified in the DB.
+    const supabaseUrl = requireEnv("VITE_SUPABASE_URL");
+    const supabaseKey =
+      process.env.SUPABASE_SERVICE_KEY || process.env.VITE_SUPABASE_ANON_KEY;
+    if (!supabaseKey) {
+      return json(503, { success: false, message: "Server configuration error" });
+    }
+    const supabase = createClient(supabaseUrl, supabaseKey);
+
+    const { data: record, error: dbError } = await supabase
+      .from("otp_verifications")
+      .select("verified")
+      .eq("email", submissionEmail)
+      .maybeSingle();
+
+    if (dbError) {
+      console.error("submit-form DB check failed:", dbError);
+      return json(503, { success: false, message: "Unable to validate verification state. Please try again later." });
+    }
+    if (!record || record.verified !== true) {
+      return json(401, {
+        success: false,
+        message: "Email verification has not been completed. Please verify your email first.",
+      });
+    }
+  } catch (error) {
+    console.error("submit-form verification error:", error);
+    if (error && error.message && /Missing required env var/.test(error.message)) {
+      return json(503, { success: false, message: "Server configuration error" });
+    }
+    return json(500, { success: false, message: "Failed to validate verification state" });
   }
 
-  // Non-destructive processing (no DB/email here)
   const response = {
     success: true,
     message: "Form submitted successfully.",
     timestamp: new Date().toISOString(),
   };
 
-  return {
-    statusCode: 200,
-    headers: {
-      "Content-Type": "application/json",
-      "X-Content-Type-Options": "nosniff",
-      "X-Frame-Options": "DENY",
-      "X-XSS-Protection": "1; mode=block",
-      "Referrer-Policy": "strict-origin-when-cross-origin",
-      "Permissions-Policy": "camera=(), microphone=(), geolocation=()",
-    },
-    body: JSON.stringify(response),
-  };
+  return json(200, response);
 };
+

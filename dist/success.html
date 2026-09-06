@@ -24,19 +24,11 @@
       href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css"
       rel="stylesheet"
     />
-    <style>
-      .summary-card {
-        border-left: 5px solid #6a11cb;
-      }
-      .summary-key {
-        font-weight: 600;
-        color: #555;
-      }
-      .summary-value {
-        color: #333;
-      }
-    </style>
-    <link rel="stylesheet" crossorigin href="/assets/styles-BhPV85s-.css">
+    <!-- Summary presentation styles (.summary-card / .summary-key / .summary-value)
+         live in styles.css so success.html ships without an inline <style> block. -->
+    <script type="module" crossorigin src="/assets/success-3X6a2xDZ.js"></script>
+    <link rel="modulepreload" crossorigin href="/assets/styles-4irG7Mct.js">
+    <link rel="stylesheet" crossorigin href="/assets/styles-QtMA82-c.css">
   </head>
   <body>
     <main>
@@ -188,91 +180,9 @@
         </div>
       </div>
     </footer>
-    <script>
-      document.addEventListener("DOMContentLoaded", () => {
-        const summaryContainer = document.getElementById(
-          "submission-summary-container",
-        );
-        const rawData = sessionStorage.getItem("submissionData");
-
-        if (rawData && summaryContainer) {
-          try {
-            const data = JSON.parse(rawData);
-
-            const card = document.createElement("div");
-            card.className = "card summary-card bg-light p-3 mt-4";
-
-            const title = document.createElement("h5");
-            title.className = "card-title mb-3";
-            title.textContent = "Your Submission Summary";
-            card.appendChild(title);
-
-            const list = document.createElement("dl");
-            list.className = "row";
-
-            // A helper function to format keys into readable labels
-            const formatKey = (key) => {
-              return key
-                .replace(/-/g, " ")
-                .replace(/\b\w/g, (l) => l.toUpperCase());
-            };
-
-            // Define which fields to display and in what order
-            const fieldsToDisplay = [
-              "submission-id",
-              "full-name",
-              "email",
-              "phone",
-              "country",
-              "dob",
-              "gender",
-              "branch",
-              "group",
-              "artist",
-              "payment-type",
-              "payment-method",
-              "contact-method",
-            ];
-
-            fieldsToDisplay.forEach((key) => {
-              if (data[key]) {
-                const dt = document.createElement("dt");
-                dt.className = "col-sm-4 summary-key";
-                dt.textContent = formatKey(key);
-
-                const dd = document.createElement("dd");
-                dd.className = "col-sm-8 summary-value";
-                dd.textContent = data[key];
-
-                list.appendChild(dt);
-                list.appendChild(dd);
-              }
-            });
-
-            card.appendChild(list);
-            summaryContainer.appendChild(card);
-
-            // Clear the data from session storage for security
-            sessionStorage.removeItem("submissionData");
-          } catch (error) {
-            console.error(
-              "Error parsing or displaying submission data:",
-              error,
-            );
-            summaryContainer.innerHTML =
-              '<p class="text-danger">Could not display submission summary due to an error.</p>';
-          }
-        } else if (summaryContainer) {
-          // Handle case where user lands here directly
-          summaryContainer.innerHTML = `
-            <div class="alert alert-warning text-center">
-              <p class="mb-0">No submission data found.</p>
-              <p class="mb-0">If you intended to submit a form, please <a href="index.html" class="alert-link">start here</a>.</p>
-            </div>
-          `;
-        }
-      });
-    </script>
+    <!-- Submission summary rendering moved to success.js (external module) so this
+         page has no inline scripts and can enforce a strict CSP. -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
   </body>
 </html>
+
