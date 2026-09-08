@@ -7,13 +7,14 @@ if (typeof document !== "undefined") {
     }
 
     initialize(modalId) {
+      if (this.activeModals.has(modalId)) return this.activeModals.get(modalId);
       const element = document.getElementById(modalId);
       if (!element) {
         showToast(`Modal ${modalId} not found`, "danger");
         return null;
       }
       try {
-        const modal = new bootstrap.Modal(element, {
+        const modal = bootstrap.Modal.getOrCreateInstance(element, {
           backdrop: "static",
           keyboard: true,
         });
@@ -21,7 +22,6 @@ if (typeof document !== "undefined") {
         element.addEventListener(
           "hidden.bs.modal",
           () => this.cleanup(modalId),
-          { once: true },
         );
         return modal;
       } catch (error) {
@@ -39,7 +39,11 @@ if (typeof document !== "undefined") {
       if (options.countdown) {
         this.setupCountdown(modalId, options.countdown);
       }
-      modal.show();
+      const open = document.querySelector(".modal.show");
+      if (open && open.id !== modalId) {
+        open.addEventListener("hidden.bs.modal", () => modal.show(), { once: true });
+        bootstrap.Modal.getInstance(open)?.hide();
+      } else { modal.show(); }
       if (modalId === "validationModal" || modalId === "paymentModal") {
         this.setupSpinnerTimeout(modalId);
       }
@@ -123,7 +127,11 @@ if (typeof document !== "undefined") {
     if (toast) {
       toast.className = `toast align-items-center text-white bg-${type} border-0`;
       document.getElementById("global-toast-body").textContent = message;
-      const bsToast = new bootstrap.Toast(toast);
+      if (typeof bootstrap === "undefined") {
+        toast.classList.add("show");
+        return;
+      }
+      const bsToast = bootstrap.Toast.getOrCreateInstance(toast, { delay: timeout || 5000 });
       bsToast.show();
       if (timeout > 0) {
         setTimeout(() => bsToast.hide(), timeout);
@@ -660,12 +668,13 @@ if (typeof document !== "undefined") {
   function translatePage(language) {
     activeLanguage = language === "auto" ? detectBrowserLanguage() : language;
     document.documentElement.lang = activeLanguage;
-    document.querySelectorAll("[data-i18n]").forEach((element) => {
-      element.textContent = translations[activeLanguage]?.[element.dataset.i18n] || element.dataset.i18n;
-    });
+    // Keyed translations are owned by src/i18n; never overwrite them with raw keys.
     const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
     const textNodes = [];
-    while (walker.nextNode()) textNodes.push(walker.currentNode);
+    while (walker.nextNode()) {
+      const node = walker.currentNode;
+      if (!node.parentElement?.closest('[data-i18n], script, style, #wizard-status, #otp-display-email, #global-toast, [role="alert"]')) textNodes.push(node);
+    }
     textNodes.forEach((node) => {
       if (!originalTextNodes.has(node)) originalTextNodes.set(node, node.nodeValue);
       node.nodeValue = translateText(originalTextNodes.get(node));
@@ -742,8 +751,8 @@ if (typeof document !== "undefined") {
       }).catch(() => {});
     }
     
-    const translationObserver = new MutationObserver(() => translatePage(activeLanguage));
-    translationObserver.observe(document.body, { childList: true, subtree: true });
+    // Translating from a body-wide mutation observer repeatedly retriggers itself.
+    // Translate on language changes only; dynamic status/error text must remain intact.
 
     if (typeof AOS !== "undefined") {
       AOS.init({ duration: 800, once: true });
@@ -1071,6 +1080,7 @@ if (typeof document !== "undefined") {
     // Submission guards to ensure form is only submitted after explicit confirmation
     let confirmModalShown = false;
     let submissionConfirmed = false;
+    let submissionInFlight = false;
 
     const initializeOTPModal = () => {
       modalManager.initialize("otpModal");
@@ -1273,8 +1283,8 @@ if (typeof document !== "undefined") {
             formEmail.value = otpVerifiedEmail;
             formEmail.dispatchEvent(new Event("input", { bubbles: true }));
           }
+          document.getElementById("otpModal").addEventListener("hidden.bs.modal", resumeAfterOTPVerification, { once: true });
           modalManager.hide("otpModal");
-          resumeAfterOTPVerification();
         });
       }
 
@@ -1826,7 +1836,7 @@ if (typeof document !== "undefined") {
       const isValid = isFormValidRealtime(false, false);
       // Never actually disable the button (so it's always clickable). Use
       // aria-disabled to communicate the state to assistive tech instead.
-      submitBtn.disabled = false;
+      submitBtn.disabled = submissionInFlight;
       if (!isValid) {
         submitBtn.setAttribute('aria-disabled', 'true');
       } else {
@@ -2287,6 +2297,7 @@ if (typeof document !== "undefined") {
     }
 
     async function submitFormInternal() {
+      if (submissionInFlight) return;
       // Ensure this flow is only executed after explicit confirmation click
       if (!submissionConfirmed) {
         showToast(
@@ -2296,7 +2307,7 @@ if (typeof document !== "undefined") {
         // If confirm modal was not shown, open it so the user can review
         if (!confirmModalShown) {
           fillConfirmDetails();
-          confirmModal?.show();
+          modalManager.show("confirmModal");
           confirmModalShown = true;
         }
         return;
@@ -2313,6 +2324,7 @@ if (typeof document !== "undefined") {
         return;
       }
 
+      submissionInFlight = true;
       submitBtn.disabled = true;
       if (spinner) spinner.classList.remove("d-none");
       if (btnText) btnText.textContent = "Submitting...";
@@ -2331,6 +2343,7 @@ if (typeof document !== "undefined") {
           method: "POST",
           headers: { "Content-Type": "application/json", Accept: "application/json", Authorization: `Bearer ${session.access_token}` },
           body: JSON.stringify(payload),
+          signal: AbortSignal.timeout(20000),
         });
         const validationData = await validationResponse.json().catch(() => ({}));
         if (!validationResponse.ok || validationData?.success !== true) {
@@ -2353,6 +2366,7 @@ if (typeof document !== "undefined") {
           method: "POST",
           headers: { "Content-Type": "application/x-www-form-urlencoded" },
           body: encoded.toString(),
+          signal: AbortSignal.timeout(20000),
         });
         if (!captureResponse.ok) {
           throw new Error("Netlify could not save the submission. Please try again.");
@@ -2381,12 +2395,13 @@ if (typeof document !== "undefined") {
       } catch (err) {
         console.error("Submission Error:", err.message, err.stack);
         showToast(
-          `Submission failed: ${err.message}. Please try again.`,
+          err.name === "TimeoutError" ? "The request timed out. Your entries are still here. Check your connection before retrying." : `Submission failed: ${err.message}. Please try again.`,
           "danger",
         );
         // Reset confirmation flags so user must reconfirm after fixing errors
         submissionConfirmed = false;
         confirmModalShown = false;
+        submissionInFlight = false;
         submitBtn.disabled = false;
         if (spinner) spinner.classList.add("d-none");
         if (btnText) btnText.textContent = "Submit Subscription";
@@ -2556,6 +2571,7 @@ if (typeof document !== "undefined") {
 
         if (target) {
           try {
+            form.dispatchEvent(new CustomEvent('wizard:reveal', { detail: target }));
             target.scrollIntoView({ behavior: 'smooth', block: 'center' });
           } catch {}
 
@@ -2605,10 +2621,19 @@ if (typeof document !== "undefined") {
       modalManager.initialize("onboardingModal");
       const startBtn = document.getElementById('start-now-btn');
       if (startBtn) startBtn.addEventListener('click', () => {
-        try { document.getElementById('subscription-form').scrollIntoView({ behavior: 'smooth' }); } catch {}
+        document.getElementById('onboardingModal').addEventListener('hidden.bs.modal', () => {
+          form.dispatchEvent(new CustomEvent('wizard:reveal', { detail: document.getElementById('referral-code') }));
+          document.getElementById('referral-code')?.focus();
+        }, { once: true });
       });
       // Do not block the form with an automatic modal on initial load.
     } catch {}
+
+    document.getElementById('open-onboarding-btn')?.addEventListener('click', () => modalManager.show('onboardingModal'));
+    const updateConnectionStatus = () => document.getElementById('connection-status')?.classList.toggle('d-none', navigator.onLine);
+    window.addEventListener('offline', updateConnectionStatus);
+    window.addEventListener('online', updateConnectionStatus);
+    updateConnectionStatus();
 
     // Create and initialize a lightweight 5-step wizard grouping existing fields
     function createWizard() {
@@ -2619,18 +2644,11 @@ if (typeof document !== "undefined") {
       if (form.dataset.wizardInitialized) return;
       form.dataset.wizardInitialized = 'true';
 
-      const findWrapper = (el) => {
-        if (!el) return null;
-        if (typeof el.closest === 'function' && el.closest('.mb-3')) return el.closest('.mb-3');
-        if (el.parentElement === form) return null;
-        return el.parentElement || el;
-      };
-
       const stepMap = {
         1: ['referral-code','full-name','email','zangi-id','phone'],
         2: ['address-section','country-select','dob','gender'],
         3: ['branch','group','artist','subscription-amount','payment-type','installment-options','payment-methods','email-contact'],
-        4: ['events-section'],
+        4: ['events-section', 'artist-roadmap'],
         5: ['feedback','installment-terms-wrapper','privacy-policy','subscription-agreement','submit-btn','submit-help-text']
       };
 
@@ -2638,17 +2656,17 @@ if (typeof document !== "undefined") {
       const indicators = document.createElement('div');
       indicators.className = 'step-indicators d-flex justify-content-center mb-3';
       indicators.id = 'wizard-step-indicators';
-      indicators.setAttribute('role','tablist');
+      indicators.setAttribute('aria-label','Application steps');
       ['Profile','Address','Preferences','Events','Review'].forEach((label, i) => {
         const btn = document.createElement('button');
         btn.type = 'button';
         btn.id = `step-tab-${i+1}`;
         btn.className = `btn btn-sm btn-light step-indicator${i===0? ' active' : ''}`;
         btn.dataset.step = String(i+1);
-        btn.setAttribute('role','tab');
+
         btn.setAttribute('aria-controls', `step-${i+1}`);
         btn.setAttribute('aria-selected', i===0 ? 'true' : 'false');
-        btn.tabIndex = i===0?0:-1;
+        btn.tabIndex = 0;
         btn.textContent = label;
         btn.addEventListener('click', () => showStep(i+1));
         indicators.appendChild(btn);
@@ -2662,31 +2680,45 @@ if (typeof document !== "undefined") {
         sec.className = 'step' + (i===1 ? '' : ' d-none');
         sec.dataset.step = String(i);
         sec.id = `step-${i}`;
-        sec.setAttribute('role','tabpanel');
+        sec.tabIndex = -1;
         sec.setAttribute('aria-labelledby', `step-tab-${i}`);
         sec.setAttribute('aria-hidden', i===1 ? 'false' : 'true');
         stepsContainer.appendChild(sec);
       }
 
-      // Move elements into steps
-      for (let s=1;s<=totalSteps;s++){
-        const ids = stepMap[s] || [];
-        ids.forEach((id) => {
-          try{
-            let el = document.getElementById(id);
-            if (!el) el = form.querySelector(`[name="${id}"]`);
-            if (!el) return;
-            const wrapper = findWrapper(el);
-            const target = document.getElementById(`step-${s}`);
-            if (wrapper && target && wrapper !== target) target.appendChild(wrapper);
-            else if (el && target && el.parentElement !== target) target.appendChild(el);
-          }catch(e){ console.warn('move error', e); }
-        });
+      // Move complete top-level groups into detached sections, preserving nested fields.
+      const originalGroups = Array.from(form.children);
+      for (const group of originalGroups) {
+        if (group.matches('input[type="hidden"]') || group.style.display === 'none') continue;
+        let step = 3;
+        for (const [number, ids] of Object.entries(stepMap)) {
+          if (ids.some(id => group.id === id || group.querySelector(`[id="${id}"]`))) {
+            step = Number(number); break;
+          }
+        }
+        stepsContainer.querySelector(`#step-${step}`).appendChild(group);
       }
-
-      // Insert indicators and steps at top of form
-      form.insertBefore(indicators, form.firstChild);
-      form.insertBefore(stepsContainer, indicators.nextSibling);
+      form.prepend(indicators, stepsContainer);
+      const nav = document.createElement('div');
+      nav.className = 'wizard-nav';
+      nav.innerHTML = '<button type="button" class="btn btn-outline-secondary" id="prev-btn">Back</button><span id="wizard-status" role="status"></span><button type="button" class="btn btn-primary" id="next-btn">Next</button>';
+      form.appendChild(nav);
+      nav.querySelector('#prev-btn').addEventListener('click', () => showStep(current - 1));
+      nav.querySelector('#next-btn').addEventListener('click', () => {
+        const fields = Array.from(document.querySelectorAll(`#step-${current} [required]`)).filter(field => !field.disabled);
+        const invalid = fields.filter(field => !validateField(field, true));
+        if (invalid.length) {
+          showToast('Please complete the highlighted fields before continuing.', 'danger');
+          const focusTarget = invalid[0].type === 'hidden' ? document.querySelector(`#step-${current} input:not([type="hidden"]), #step-${current} button`) : invalid[0];
+          focusTarget?.focus();
+          return;
+        }
+        showStep(current + 1);
+      });
+      form.addEventListener('wizard:reveal', event => {
+        const step = event.detail?.closest('.step');
+        if (step) showStep(Number(step.dataset.step));
+      });
 
       function updateWizardUI() {
         for (let i=1;i<=totalSteps;i++){
@@ -2700,9 +2732,12 @@ if (typeof document !== "undefined") {
           const isCurrent = Number(b.dataset.step)===current;
           b.classList.toggle('active', isCurrent);
           b.setAttribute('aria-selected', isCurrent ? 'true' : 'false');
-          b.tabIndex = isCurrent ? 0 : -1;
+          b.tabIndex = 0;
           if (isCurrent) b.setAttribute('aria-current','true'); else b.removeAttribute('aria-current');
         });
+        nav.querySelector('#prev-btn').disabled = current === 1;
+        nav.querySelector('#next-btn').classList.toggle('d-none', current === totalSteps);
+        nav.querySelector('#wizard-status').textContent = `Step ${current} of ${totalSteps}`;
         // progress UI updated via step indicators
         // Update progress bar to reflect step progress
         try{
@@ -2711,20 +2746,23 @@ if (typeof document !== "undefined") {
         }catch{}
       }
 
-      function showStep(n){
+      function showStep(n, moveFocus = true){
         if (!n || n<1) n=1; if (n>totalSteps) n=totalSteps;
         current = n;
         updateWizardUI();
         // focus first input in step
-        const first = document.querySelector(`#step-${current} input, #step-${current} select, #step-${current} textarea, #step-${current} button`);
-        if (first && typeof first.focus === 'function') try{ first.focus({preventScroll:true}); }catch{}
+        const first = document.querySelector(`#step-${current}`);
+        if (moveFocus && first) {
+          first.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          first.focus({ preventScroll: true });
+        }
       }
 
       /* Back/Next controls removed; navigation handled via step indicators */
 
 
       // initialize view
-      showStep(1);
+      showStep(1, false);
     }
 
     try { createWizard(); } catch (e) { console.warn('Wizard init failed', e); }

@@ -9,7 +9,7 @@
     "dev": "vite build --watch & node server.cjs",
     "build": "vite build",
     "lint": "eslint .",
-    "test": "node test/test.mjs",
+    "test": "node --test test/test.mjs test/flow.mjs",
     "check": "npm run lint && npm test && npm run build",
     "format": "prettier --write \"**/*.{js,html,css,json,md}\"",
     "test:e2e": "playwright test tests/"
@@ -28,6 +28,7 @@
   "devDependencies": {
     "@playwright/test": "^1.63.0",
     "eslint": "^9.36.0",
+    "jsdom": "26.1.0",
     "mailosaur": "^11.1.1",
     "prettier": "^3.9.6",
     "vite": "^6.3.6"

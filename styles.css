@@ -975,3 +975,46 @@ main .card-body { min-width: 0; padding: clamp(0.5rem, 2vw, 1.5rem); }
   .modal-footer .btn { flex: 1 1 auto; }
   .wizard-nav .btn { min-width: 0 !important; }
 }
+
+/* A bounded reading width keeps large monitors comfortable without scaling the UI. */
+.app-shell { width: 100%; max-width: 48rem; }
+main .application-card { padding: 0; box-shadow: 0 8px 30px rgb(0 0 0 / 10%); }
+main .application-card > .card-body { padding: clamp(1rem, 3vw, 2rem); }
+.application-card h1 { font-size: clamp(1.4rem, 3vw, 1.9rem); line-height: 1.25; }
+.application-card h2 { font-size: clamp(1rem, 2vw, 1.2rem); line-height: 1.45; }
+.application-card p, .application-card li { line-height: 1.55; }
+.onboarding-entry { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: .75rem; margin-bottom: 1rem; font-size: .9rem; color: #56616b; }
+.culture-details { padding: .75rem 1rem; border: 1px solid #e4e7eb; border-radius: .75rem; font-size: .9rem; }
+.culture-details summary { cursor: pointer; font-weight: 600; }
+.culture-details[open] summary { margin-bottom: .75rem; }
+.step-indicators { display: grid !important; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: .25rem; }
+.step-indicators .step-indicator { margin: 0; border-radius: .5rem; padding: .5rem .15rem; font-size: .78rem; overflow-wrap: anywhere; }
+.wizard-nav { display: flex; align-items: center; justify-content: space-between; gap: .75rem; border-top: 1px solid #e4e7eb; padding-top: 1rem; }
+#wizard-status { color: #66717b; font-size: .85rem; text-align: center; }
+.step { scroll-margin-top: 6rem; }
+.step:focus { outline: none; }
+.modal-dialog { margin: 1rem auto; max-width: min(30rem, calc(100% - 1.5rem)); }
+.modal-dialog-scrollable { height: calc(100dvh - 2rem); }
+.modal-content { font-size: 1rem; max-height: 100%; }
+.modal-header, .modal-footer { flex-shrink: 0; padding: 1rem; }
+.modal-title { font-size: 1.15rem; line-height: 1.4; }
+.modal-header .btn-close { flex-shrink: 0; margin-left: .75rem; }
+.modal-body { padding: 1rem; overflow-wrap: anywhere; }
+#onboardingModal .modal-content { max-height: 100%; }
+#onboardingModal .modal-body { max-height: none; padding: 1rem; }
+.onboarding-eyebrow { color: #6c757d; font-size: .75rem; letter-spacing: .08em; text-transform: uppercase; margin: 0 0 .35rem; }
+.onboarding-steps { padding-left: 1.4rem; margin: 1rem 0; }
+.onboarding-steps li { padding-left: .25rem; margin-bottom: 1rem; }
+.onboarding-steps strong, .onboarding-steps span { display: block; }
+.onboarding-steps span { margin-top: .2rem; color: #66717b; font-size: .9rem; }
+.onboarding-note { padding: .75rem; background: #f5f7fa; border-radius: .5rem; font-size: .85rem; margin: 0; }
+#onboardingModal .modal-footer .btn { width: auto; }
+#paymentModal .modal-body, #digitalCurrencySuccessModal .modal-body { padding: 1rem; }
+@media (max-width: 360px) {
+  .site-header .container { gap: .5rem; }
+  .step-indicators .step-indicator { font-size: .7rem; }
+  .wizard-nav .btn { padding-inline: .75rem; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; transition-duration: .01ms !important; }
+}
