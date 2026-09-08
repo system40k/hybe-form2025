@@ -80,6 +80,8 @@ A secure, scalable fan registration platform with email verification using 6-dig
    - `VITE_SUPABASE_URL`: Your Supabase project URL
    - `VITE_SUPABASE_ANON_KEY`: Supabase anon/public key
    - `SUPABASE_SERVICE_KEY`: Supabase service role key
+   - `OTP_HASH_SECRET`: HMAC secret used to hash stored OTPs
+   - `OTP_SIGNING_SECRET`: Separate HMAC secret for verification tokens
    - `RESEND_API_KEY`: Resend email API key
    - `EMAIL_FROM`: Sender email address
 
@@ -161,8 +163,9 @@ npm run test:e2e
 2. On submit, OTP verification modal appears
 3. User enters email → receives 6-digit code
 4. User enters code → system verifies
-5. On success, form submits automatically
-6. User redirected to success page
+5. Supabase-backed verification authorizes the submission
+6. Netlify Forms stores the verified form (without the OTP token)
+7. User redirected to success page
 
 ## 🔧 Configuration Options
 
@@ -173,6 +176,8 @@ npm run test:e2e
 | `VITE_SUPABASE_URL` | Supabase project URL | Required |
 | `VITE_SUPABASE_ANON_KEY` | Supabase public key | Required |
 | `SUPABASE_SERVICE_KEY` | Supabase service key | Required |
+| `OTP_HASH_SECRET` | Server-only OTP hashing secret | Required |
+| `OTP_SIGNING_SECRET` | Server-only verification-token secret | Required |
 | `RESEND_API_KEY` | Resend email API key | Required |
 | `EMAIL_FROM` | Sender email | `onboarding@resend.dev` |
 | `OTP_RATE_LIMIT_MAX_REQUESTS` | Max OTP requests | 3 |

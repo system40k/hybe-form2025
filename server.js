@@ -24,7 +24,7 @@
 //   NODE_ENV                 production enables HSTS + upgrade-insecure-requests
 //   VITE_SUPABASE_URL        Supabase project URL
 //   SUPABASE_SERVICE_KEY     service-role key (server only)
-//   VITE_SUPABASE_ANON_KEY   fallback if SUPABASE_SERVICE_KEY is unset
+//   VITE_SUPABASE_ANON_KEY   public browser key only; never used by server routes
 //   OTP_HASH_SECRET          HMAC secret for OTP digests
 //   OTP_SIGNING_SECRET       HMAC secret for capability tokens
 //   RESEND_API_KEY           email provider (missing -> /api/otp/send 503s)
@@ -166,9 +166,7 @@ app.get("/health", (req, res) => {
     dist: fs.existsSync(indexHtmlPath),
     config: {
       supabaseUrl: Boolean(process.env.VITE_SUPABASE_URL),
-      supabaseKey: Boolean(
-        process.env.SUPABASE_SERVICE_KEY || process.env.VITE_SUPABASE_ANON_KEY,
-      ),
+      supabaseKey: Boolean(process.env.SUPABASE_SERVICE_KEY),
       otpHashSecret: Boolean(process.env.OTP_HASH_SECRET),
       otpSigningSecret: Boolean(process.env.OTP_SIGNING_SECRET),
       resendConfigured: Boolean(process.env.RESEND_API_KEY),
@@ -271,7 +269,7 @@ app.get("/success", (req, res) => {
 
 // SPA fallback (GET/HEAD only). API routes, asset files and anything with a
 // file extension return 404 instead of the HTML shell.
-app.get("*", (req, res) => {
+app.get("/{*splat}", (req, res) => {
   if (/\.\w+$/.test(req.path) || req.path.startsWith("/api/")) {
     res.status(404).type("text/plain").send("Not Found");
     return;
@@ -317,5 +315,3 @@ if (isMain) {
 }
 
 export { app, DIST_DIR, buildCsp };
-
-

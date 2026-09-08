@@ -83,11 +83,7 @@ export const handler = async (event) => {
   try {
     const hashSecret = requireEnv("OTP_HASH_SECRET");
     const supabaseUrl = requireEnv("VITE_SUPABASE_URL");
-    const supabaseKey =
-      process.env.SUPABASE_SERVICE_KEY || process.env.VITE_SUPABASE_ANON_KEY;
-    if (!supabaseKey) {
-      return json(503, { success: false, error: "Server configuration error" });
-    }
+    const supabaseKey = requireEnv("SUPABASE_SERVICE_KEY");
 
     let body;
     try {
@@ -168,4 +164,3 @@ export const handler = async (event) => {
     return json(500, { success: false, error: "Failed to verify OTP" });
   }
 };
-

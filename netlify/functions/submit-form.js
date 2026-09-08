@@ -237,11 +237,7 @@ export const handler = async (event) => {
 
     // Cross-check server state: the email must actually be verified in the DB.
     const supabaseUrl = requireEnv("VITE_SUPABASE_URL");
-    const supabaseKey =
-      process.env.SUPABASE_SERVICE_KEY || process.env.VITE_SUPABASE_ANON_KEY;
-    if (!supabaseKey) {
-      return json(503, { success: false, message: "Server configuration error" });
-    }
+    const supabaseKey = requireEnv("SUPABASE_SERVICE_KEY");
     const supabase = createClient(supabaseUrl, supabaseKey);
 
     const { data: record, error: dbError } = await supabase
@@ -276,4 +272,3 @@ export const handler = async (event) => {
 
   return json(200, response);
 };
-
