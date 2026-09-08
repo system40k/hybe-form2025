@@ -2283,54 +2283,43 @@ if (typeof document !== "undefined") {
         formData.set("form-name", "subscription-form");
         const payload = Object.fromEntries(formData.entries());
 
-        const netlifyCapture = (async () => {
-          try {
-            const encoded = new URLSearchParams();
-            for (const [k, v] of formData.entries()) encoded.append(k, v);
-            await fetch("/", {
-              method: "POST",
-              headers: { "Content-Type": "application/x-www-form-urlencoded" },
-              body: encoded.toString(),
-            });
-          } catch (e) {
-            if (location.hostname !== "localhost") {
-              console.warn("Netlify forms capture failed", e);
-            }
-          }
-        })();
-
-        const serverFunction = (async () => {
-          try {
-            const endpoint = "/submit-form";
-            const response = await fetch(endpoint, {
-              method: "POST",
-              headers: { "Content-Type": "application/json", Accept: "application/json" },
-              body: JSON.stringify(payload),
-            });
-            const data = await response.json().catch(() => ({}));
-            if (!response.ok || data?.success === false) {
-              const formLevelErrorMessage =
-                data?.message ||
-                (response.status === 400
-                  ? "Invalid data sent to the server. Please refresh and try again."
-                  : response.status >= 500
+        // Supabase-backed verification is the authorization gate. Never let
+        // Netlify Forms persist a submission until this endpoint succeeds.
+        const validationResponse = await fetch("/submit-form", {
+          method: "POST",
+          headers: { "Content-Type": "application/json", Accept: "application/json" },
+          body: JSON.stringify(payload),
+        });
+        const validationData = await validationResponse.json().catch(() => ({}));
+        if (!validationResponse.ok || validationData?.success !== true) {
+          throw new Error(
+            validationData?.message ||
+              (validationResponse.status === 400
+                ? "Invalid data sent to the server. Please refresh and try again."
+                : validationResponse.status >= 500
                   ? "A server error occurred. Please try again later."
-                  : "An error occurred. Please check the form and try again.");
-              showToast(formLevelErrorMessage, "warning");
-            }
-          } catch (e) {
-            console.warn("Server function submission failed", e);
-          }
-        })();
+                  : "Email verification failed. Please verify your email and try again."),
+          );
+        }
 
-        const results = await Promise.allSettled([netlifyCapture, serverFunction]);
-        const allFailed = results.every((r) => r.status === "rejected");
-        if (allFailed) {
-          throw new Error("All submission attempts failed");
+        // The signed OTP capability is only for server authorization and must
+        // not be stored in the durable Netlify Forms submission.
+        const encoded = new URLSearchParams();
+        for (const [key, value] of formData.entries()) {
+          if (key !== "otp_token") encoded.append(key, value);
+        }
+        const captureResponse = await fetch("/", {
+          method: "POST",
+          headers: { "Content-Type": "application/x-www-form-urlencoded" },
+          body: encoded.toString(),
+        });
+        if (!captureResponse.ok) {
+          throw new Error("Netlify could not save the submission. Please try again.");
         }
 
         // The OTP capability token must never be persisted client-side
-        const { otp_token: _otpToken, ...storedPayload } = payload;
+        const storedPayload = { ...payload };
+        delete storedPayload.otp_token;
         sessionStorage.setItem("submissionData", JSON.stringify(storedPayload));
         // Reset confirmation state to avoid accidental re-submits
         submissionConfirmed = false;

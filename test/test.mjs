@@ -1,41 +1,60 @@
 // test/test.mjs
-import { sendEmailOtp } from "../lib/supabaseClient.js";
+import assert from "node:assert/strict";
+import test from "node:test";
 
-async function runTest() {
-  console.log("Running test to ensure server-side compatibility...");
-  try {
-    // This call is expected to fail because Supabase env vars are not configured
-    // in this test environment.
-    // However, the critical point is that it should NOT fail with a
-    // "ReferenceError: window is not defined".
-    await sendEmailOtp("test@example.com");
+import { handler as sendOtp } from "../netlify/functions/otp-send.js";
+import { handler as verifyOtp } from "../netlify/functions/otp-verify.js";
+import { handler as submitForm } from "../netlify/functions/submit-form.js";
 
-    // We don't realistically expect to get here in a simple test runner,
-    // but if it runs without error, it means no reference to 'window' was hit.
-    console.log(
-      "TEST PASSED: sendEmailOtp executed without a 'window' reference error.",
-    );
-    process.exit(0);
-  } catch (error) {
-    if (
-      error instanceof ReferenceError &&
-      error.message.includes("window is not defined")
-    ) {
-      console.error(
-        "TEST FAILED: The code still contains a reference to the `window` object, which is not available in a server-side environment.",
-      );
-      console.error(error);
-      process.exit(1); // Explicit failure
-    } else {
-      console.log(
-        "TEST PASSED: The code does not reference the `window` object.",
-      );
-      console.log(
-        `(The function failed as expected, but for a different, acceptable reason: "${error.message}")`,
-      );
-      process.exit(0); // Explicit success
-    }
-  }
+const functions = [
+  ["otp-send", sendOtp],
+  ["otp-verify", verifyOtp],
+  ["submit-form", submitForm],
+];
+
+for (const [name, handler] of functions) {
+  test(`${name} rejects non-POST requests`, async () => {
+    const response = await handler({ httpMethod: "GET", headers: {}, body: "" });
+    assert.equal(response.statusCode, 405);
+    assert.match(response.headers["Content-Type"], /application\/json/);
+    assert.equal(response.headers["Cache-Control"], "no-store");
+  });
 }
 
-runTest();
+test("OTP functions fail closed without server-only configuration", async () => {
+  const saved = {
+    SUPABASE_SERVICE_KEY: process.env.SUPABASE_SERVICE_KEY,
+    OTP_HASH_SECRET: process.env.OTP_HASH_SECRET,
+  };
+  delete process.env.SUPABASE_SERVICE_KEY;
+  delete process.env.OTP_HASH_SECRET;
+
+  try {
+    for (const handler of [sendOtp, verifyOtp]) {
+      const response = await handler({
+        httpMethod: "POST",
+        headers: {},
+        body: JSON.stringify({ email: "test@example.com", otp_code: "123456" }),
+      });
+      assert.equal(response.statusCode, 503);
+    }
+  } finally {
+    for (const [key, value] of Object.entries(saved)) {
+      if (value === undefined) delete process.env[key];
+      else process.env[key] = value;
+    }
+  }
+});
+
+test("submission rejects a missing verification token", async () => {
+  const response = await submitForm({
+    httpMethod: "POST",
+    headers: {},
+    body: JSON.stringify({
+      "referral-code": "HYBE2025",
+      "full-name": "Test User",
+      email: "test@example.com",
+    }),
+  });
+  assert.equal(response.statusCode, 401);
+});

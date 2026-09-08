@@ -4,12 +4,12 @@ export default [
   {
     ignores: ["dist/**", "node_modules/**"],
   },
-  // Configuration for Node.js files (CommonJS)
+  // Configuration for Node.js ESM files
   {
     files: ["server.js", "lib/security.js"],
     languageOptions: {
       ecmaVersion: 2021,
-      sourceType: "commonjs",
+      sourceType: "module",
       globals: {
         ...globals.node,
       },

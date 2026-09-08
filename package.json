@@ -9,6 +9,8 @@
     "dev": "vite build --watch & node server.cjs",
     "build": "vite build",
     "lint": "eslint .",
+    "test": "node test/test.mjs",
+    "check": "npm run lint && npm test && npm run build",
     "format": "prettier --write \"**/*.{js,html,css,json,md}\"",
     "test:e2e": "playwright test tests/"
   },
@@ -17,17 +19,17 @@
     "@supabase/supabase-js": "^2.115.0",
     "cors": "^2.8.5",
     "dotenv": "^16.0.0",
-    "express": "^4.21.2",
-    "multer": "^1.4.5-lts.1",
+    "express": "^5.2.1",
+    "multer": "^2.3.0",
     "resend": "^3.0.0",
     "ws": "^8.21.0",
     "zustand": "^5.0.15"
   },
   "devDependencies": {
-    "@playwright/test": "^1.62.1",
+    "@playwright/test": "^1.63.0",
     "eslint": "^9.36.0",
     "mailosaur": "^11.1.1",
-    "prettier": "^3.6.2",
+    "prettier": "^3.9.6",
     "vite": "^6.3.6"
   },
   "keywords": [],

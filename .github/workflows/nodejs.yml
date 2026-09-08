@@ -17,6 +17,4 @@ jobs:
         with:
           node-version: "20"
       - run: npm ci
-      - run: npm run lint
-      - run: npm test
-      - run: npm run build || echo "No build script defined"
+      - run: npm run check
