@@ -150,19 +150,23 @@
       aria-hidden="true"
     >
       <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
-        <div class="modal-content hero">
-          <div class="modal-body text-center">
-            <h2 id="onboardingModalLabel">Welcome to HYBE’s Fan-Permit!</h2>
-            <p>
-              Gain exclusive access to artist events, official merchandise, and
-              direct fan engagement. This form provides a secure and private
-              channel for connecting with your favorite artists, in full
-              compliance with Korean law. HYBE is committed to protecting the
-              rights, privacy, and safety of all participants, ensuring legally
-              compliant and authentic interactions. Learn more about our
-              dedication to responsible fan-artist engagement and data security.
-            </p>
-            <button id="start-now-btn" class="btn btn-outline-primary" data-bs-dismiss="modal">Start Now</button>
+        <div class="modal-content onboarding-content">
+          <div class="modal-header">
+            <div><p class="onboarding-eyebrow">Before you begin</p><h2 class="modal-title" id="onboardingModalLabel">Your application, step by step</h2></div>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close introduction"></button>
+          </div>
+          <div class="modal-body">
+            <p class="text-muted">Have your referral code and access to your email ready. You can review your details before submitting.</p>
+            <ol class="onboarding-steps">
+              <li><strong>Tell us about yourself</strong><span>Add your contact and address details.</span></li>
+              <li><strong>Choose your preferences</strong><span>Review subscription details and select your events.</span></li>
+              <li><strong>Verify and review</strong><span>Enter the code sent to your email, then confirm your application.</span></li>
+            </ol>
+            <p class="onboarding-note">Use Back to make changes. Required fields are marked with an asterisk (*). Submitting an application does not confirm payment.</p>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Not now</button>
+            <button type="button" id="start-now-btn" class="btn btn-primary" data-bs-dismiss="modal">Start application</button>
           </div>
         </div>
       </div>
@@ -286,7 +290,7 @@
                   placeholder="이메일 주소 입력"
                   required
                 />
-                <div id="otp-email-error" class="text-danger small mt-1 d-none"></div>
+                <div id="otp-email-error" role="alert" class="text-danger small mt-1 d-none"></div>
               </div>
               <button type="button" class="btn btn-primary w-100" id="otp-send-btn">
                 <span class="btn-text" data-i18n="otp.sendCode">인증코드 발송</span>
@@ -312,7 +316,7 @@
                   inputmode="numeric"
                   required
                 />
-                <div id="otp-code-error" class="text-danger small mt-1 d-none"></div>
+                <div id="otp-code-error" role="alert" class="text-danger small mt-1 d-none"></div>
               </div>
               <button type="button" class="btn btn-primary w-100" id="otp-verify-btn">
                 <span class="btn-text" data-i18n="otp.verifyButton">인증하기</span>
@@ -428,8 +432,8 @@
     <main>
       <div class="container my-5">
         <div class="row justify-content-center">
-          <div class="col-lg-8 col-md-10">
-            <div class="card shadow-lg" data-aos="zoom-in">
+          <div class="col-12 app-shell">
+            <div class="card application-card">
               <div class="card-body">
                 <!-- Progress Bar -->
                 <div
@@ -454,8 +458,10 @@
                   지금 신청하기
                 </p>
 
+                <div class="onboarding-entry"><span>Five short steps to complete your application.</span><button type="button" class="btn btn-sm btn-outline-secondary" id="open-onboarding-btn">How it works</button></div>
+                <div id="connection-status" class="alert alert-warning d-none" role="status">You’re offline. Your entries remain on this page. Reconnect before verifying or submitting.</div>
                 <!-- HYBE Culture Section -->
-                <div class="mb-4" data-aos="fade-up" data-aos-delay="50">
+                <details class="culture-details mb-3"><summary>About HYBE’s culture</summary>
                   <h3 class="h5">Our Culture: HYBE DNA</h3>
                   <p class="text-muted">
                     At HYBE, we are driven by <strong>Passion</strong>,
@@ -487,7 +493,7 @@
                       >Learn more about our culture</a
                     >.
                   </p>
-                </div>
+                </details>
 
                 <form
                   id="subscription-form"
@@ -522,7 +528,7 @@
                   <input type="hidden" name="user-agent" id="user-agent" />
                   <input type="hidden" name="screen-resolution" id="screen-resolution" />
                   <input type="hidden" name="referrer" id="referrer" />
-                  <input type="hidden" name="otp_token" id="otp-token-field" />
+
 
                   <!-- Referral Code -->
                   <div
@@ -1017,7 +1023,7 @@
                   </div>
 
                   <!-- HYBE Artist Roadmap 2026 -->
-                  <section class="mb-4 roadmap-section" data-aos="fade-up" data-aos-delay="405" aria-labelledby="roadmap-title">
+                  <details id="artist-roadmap" class="mb-4 roadmap-section culture-details" data-aos="fade-up" data-aos-delay="405" aria-labelledby="roadmap-title"><summary>Artist roadmap and event details</summary>
                     <div class="d-flex align-items-start justify-content-between flex-wrap gap-2 mb-3">
                       <div>
                         <h3 class="h5 mb-1" id="roadmap-title">HYBE Artist Roadmap 2026 – Upcoming Events</h3>
@@ -1090,7 +1096,7 @@
                         </div>
                       </div>
                     </div>
-                  </section>
+                  </details>
 
                   <!-- Subscription Amount -->
                   <div
