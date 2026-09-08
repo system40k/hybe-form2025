@@ -19,16 +19,9 @@
 //   GET  /health           -> liveness/readiness probe
 //   GET  /metrics          -> Prometheus text format
 //
-// Environment (see .env.example):
-//   PORT                     HTTP listen port (default 3000)
-//   NODE_ENV                 production enables HSTS + upgrade-insecure-requests
-//   VITE_SUPABASE_URL        Supabase project URL
-//   SUPABASE_SERVICE_KEY     service-role key (server only)
-//   VITE_SUPABASE_ANON_KEY   public browser key only; never used by server routes
-//   OTP_HASH_SECRET          HMAC secret for OTP digests
-//   OTP_SIGNING_SECRET       HMAC secret for capability tokens
-//   RESEND_API_KEY           email provider (missing -> /api/otp/send 503s)
-//   EMAIL_FROM               sender address for OTP emails
+// Auth uses VITE_SUPABASE_URL and VITE_SUPABASE_PUBLISHABLE_KEY
+// (legacy VITE_SUPABASE_ANON_KEY fallback). SMTP is configured in Supabase.
+// Old OTP endpoints return 410 so stale clients fail closed.
 
 import "dotenv/config";
 import express from "express";
@@ -36,9 +29,9 @@ import path from "node:path";
 import fs from "node:fs";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { securityHeaders, buildCsp } from "./lib/security.js";
-import { handler as otpSendHandler } from "./netlify/functions/otp-send.js";
-import { handler as otpVerifyHandler } from "./netlify/functions/otp-verify.js";
-import { handler as submitFormHandler } from "./netlify/functions/submit-form.js";
+import { handler as otpSendHandler } from "./lib/retired-otp.js";
+import { handler as otpVerifyHandler } from "./lib/retired-otp.js";
+import { handler as submitFormHandler } from "./lib/submit-form.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const DIST_DIR = path.join(__dirname, "dist");
@@ -166,10 +159,7 @@ app.get("/health", (req, res) => {
     dist: fs.existsSync(indexHtmlPath),
     config: {
       supabaseUrl: Boolean(process.env.VITE_SUPABASE_URL),
-      supabaseKey: Boolean(process.env.SUPABASE_SERVICE_KEY),
-      otpHashSecret: Boolean(process.env.OTP_HASH_SECRET),
-      otpSigningSecret: Boolean(process.env.OTP_SIGNING_SECRET),
-      resendConfigured: Boolean(process.env.RESEND_API_KEY),
+      supabaseKey: Boolean(process.env.VITE_SUPABASE_PUBLISHABLE_KEY || process.env.VITE_SUPABASE_ANON_KEY),
     },
     timestamp: new Date().toISOString(),
   });

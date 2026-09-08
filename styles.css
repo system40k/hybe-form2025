@@ -950,3 +950,28 @@ footer a[lang="ko"] {
   color: #333;
 }
 
+
+/* Responsive form and dialog layout */
+main .card { min-width: 0; padding: clamp(0.5rem, 2vw, 1.5rem); }
+main .card-body { min-width: 0; padding: clamp(0.5rem, 2vw, 1.5rem); }
+.site-header .container { gap: 1rem; }
+.site-header .header-logo { width: clamp(90px, 28vw, 160px); }
+.form-control, .form-select { min-width: 0; }
+.artist-meta, .event-label, #confirm-details dd, .summary-value { min-width: 0; overflow-wrap: anywhere; }
+.referral-card, .wizard-nav { flex-wrap: wrap; }
+.verify-weverse-badge { white-space: normal; text-align: left; }
+.global-toast-container { min-width: 0; width: min(100%, 380px); }
+.modal-dialog { width: auto; max-width: min(500px, calc(100% - 2rem)); }
+.modal-dialog-scrollable { height: calc(100dvh - 3.5rem); }
+.modal .spinner-border-sm { width: 1rem; height: 1rem; border-width: 0.15em; }
+#otp-display-email { overflow-wrap: anywhere; }
+#otp-code-input { font-variant-numeric: tabular-nums; letter-spacing: 0.25em; }
+@media (max-width: 576px) {
+  main > .container { margin-top: 1rem !important; margin-bottom: 1rem !important; }
+  .form-control, .form-select { font-size: 1rem; }
+  #onboardingModal .modal-content.hero { padding: 0.5rem; }
+  .modal-dialog-scrollable { height: calc(100dvh - 2rem); }
+  .modal-footer { flex-wrap: wrap; }
+  .modal-footer .btn { flex: 1 1 auto; }
+  .wizard-nav .btn { min-width: 0 !important; }
+}

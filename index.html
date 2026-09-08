@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta
       name="viewport"
-      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+      content="width=device-width, initial-scale=1.0"
     />
     <title>Official HYBE Fan-Permit Subscription Form 2025/2026</title>
     <meta
@@ -78,7 +78,8 @@
             />
           </a>
         </div>
-        <div class="d-flex align-items-center">
+        <div class="d-flex align-items-center gap-2 flex-wrap justify-content-end">
+          <button type="button" id="auth-signout-btn" class="btn btn-sm btn-outline-secondary d-none">Sign out</button>
           <label for="language-switcher" class="visually-hidden" data-i18n="nav.languageLabel">Language</label>
           <select id="language-switcher" class="form-select form-select-sm w-auto" aria-label="Language Switcher">
             <option value="auto" data-i18n="lang.auto">🌐 Auto</option>
@@ -177,7 +178,7 @@
       aria-modal="true"
       aria-hidden="true"
     >
-      <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
         <div class="modal-content">
           <div class="modal-body text-center">
             <p>
@@ -202,7 +203,7 @@
       aria-modal="true"
       aria-hidden="true"
     >
-      <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
         <div class="modal-content">
           <div class="modal-body text-center">
             <div class="spinner-border text-primary mb-3" role="status">
@@ -231,7 +232,7 @@
       aria-modal="true"
       aria-hidden="true"
     >
-      <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
         <div class="modal-content text-center p-4">
           <div class="modal-body">
             <i
@@ -266,11 +267,11 @@
       data-bs-backdrop="static"
       data-bs-keyboard="false"
     >
-      <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
         <div class="modal-content">
           <div class="modal-header">
             <h5 class="modal-title" id="otpModalLabel">Verify Your Email</h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" id="otp-modal-close" disabled></button>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" id="otp-modal-close"></button>
           </div>
           <div class="modal-body">
             <div id="otp-email-step">
@@ -280,7 +281,7 @@
                 <input
                   type="email"
                   class="form-control"
-                  id="otp-email-input"
+                  id="otp-email-input" autocomplete="email"
                   data-i18n="form.emailPlaceholder"
                   placeholder="이메일 주소 입력"
                   required
@@ -292,20 +293,19 @@
                 <span class="spinner-border spinner-border-sm ms-2 d-none" role="status" aria-hidden="true"></span>
               </button>
               <div id="otp-send-message" class="alert alert-info mt-3 d-none" role="alert"></div>
-              <div id="otp-resend-wrapper" class="text-center mt-3 d-none">
-                <small class="text-muted" data-i18n="otp.resendLink">코드 재전송</small>
-                <button type="button" class="btn btn-link btn-sm p-0" id="otp-resend-btn" disabled><span data-i18n="otp.resendTimer">재전송 가능: </span><span id="otp-resend-timer">30</span><span data-i18n="otp.seconds">초 후</span></button>
-              </div>
+
             </div>
 
             <div id="otp-code-step" class="d-none">
-              <p class="text-muted mb-3" data-i18n="otp.modalMessage">인증 코드가 이메일로 발송되었습니다. <strong id="otp-display-email"></strong></p>
+              <p class="text-muted mb-3"><span data-i18n="otp.modalMessage">인증 코드가 이메일로 발송되었습니다.</span> <strong id="otp-display-email"></strong></p>
               <div class="mb-3">
                 <label for="otp-code-input" class="form-label" data-i18n="otp.codeLabel">6 자리 인증코드</label>
                 <input
                   type="text"
                   class="form-control form-control-lg text-center"
                   id="otp-code-input"
+                  autocomplete="one-time-code"
+                  aria-describedby="otp-code-error"
                   data-i18n="otp.codePlaceholder"
                   placeholder="000000"
                   maxlength="6"
@@ -319,6 +319,10 @@
                 <span class="spinner-border spinner-border-sm ms-2 d-none" role="status" aria-hidden="true"></span>
               </button>
               <div id="otp-verify-message" class="alert alert-info mt-3 d-none" role="alert"></div>
+              <div id="otp-resend-wrapper" class="text-center mt-3 d-none">
+                <small class="text-muted" data-i18n="otp.resendLink">코드 재전송</small>
+                <button type="button" class="btn btn-link btn-sm p-0" id="otp-resend-btn" disabled><span data-i18n="otp.resendTimer">재전송 가능: </span><span id="otp-resend-timer">60</span><span data-i18n="otp.seconds">초 후</span></button>
+              </div>
               <div class="text-center mt-3">
                 <button type="button" class="btn btn-link btn-sm p-0" id="otp-change-email-btn" data-i18n="otp.changeEmail">이메일 변경</button>
               </div>
@@ -339,7 +343,7 @@
 
     <!-- Confirm Submission Modal -->
     <div class="modal fade" id="confirmModal" tabindex="-1" aria-labelledby="confirmModalLabel" role="dialog" aria-modal="true" aria-hidden="true">
-      <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
         <div class="modal-content">
           <div class="modal-header">
             <h5 class="modal-title" id="confirmModalLabel">
@@ -398,7 +402,7 @@
       aria-modal="true"
       aria-hidden="true"
     >
-      <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
         <div class="modal-content text-center p-4">
           <div class="modal-body">
             <div
@@ -1509,7 +1513,7 @@
 
     <!-- Language Prompt Modal -->
     <div class="modal fade" id="languagePromptModal" tabindex="-1" aria-labelledby="languagePromptModalLabel" aria-hidden="true">
-      <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
         <div class="modal-content">
           <div class="modal-header">
             <h5 class="modal-title" id="languagePromptModalLabel" data-i18n="lang.promptTitle">언어 변경</h5>
