@@ -1,3 +1,4 @@
+import { getAuthClient, getVerifiedSession } from "./src/auth.js";
 if (typeof document !== "undefined") {
   class ModalManager {
     constructor() {
@@ -1045,9 +1046,27 @@ if (typeof document !== "undefined") {
 
     // Email OTP verification state. The submission flow gates on a verified
     // email address before the review/confirm step is shown.
-    let otpVerificationToken = null;
+    let authSession = null;
+    let otpPendingEmail = null;
     let otpVerifiedEmail = null;
     let otpResendTimer = null;
+    try {
+      getAuthClient().auth.onAuthStateChange((_event, session) => {
+        authSession = session;
+        otpVerifiedEmail = session?.user?.email?.toLowerCase() || null;
+        document.getElementById("auth-signout-btn")?.classList.toggle("d-none", !session);
+      });
+    } catch { /* Configuration errors are shown when sign-in is requested. */ }
+
+    document.getElementById("auth-signout-btn")?.addEventListener("click", async () => {
+      try {
+        const { error } = await getAuthClient().auth.signOut({ scope: "local" });
+        if (error) throw error;
+        authSession = null;
+        otpVerifiedEmail = null;
+        showToast("Signed out.", "info");
+      } catch (error) { showToast(error.message || "Unable to sign out. Please retry.", "danger"); }
+    });
 
     // Submission guards to ensure form is only submitted after explicit confirmation
     let confirmModalShown = false;
@@ -1068,7 +1087,8 @@ if (typeof document !== "undefined") {
       const successStep = document.getElementById("otp-success-step");
 
       const handleOTPResponse = (success, message, step) => {
-        const errorEl = document.getElementById(`otp-${step}-error`);
+        const visibleStep = step === "email" && !codeStep.classList.contains("d-none") ? "code" : step;
+        const errorEl = document.getElementById(`otp-${visibleStep}-error`);
         const messageEl = document.getElementById(`otp-${step}-message`);
 
         if (success) {
@@ -1092,10 +1112,14 @@ if (typeof document !== "undefined") {
         successStep.classList.toggle("d-none", step !== "success");
       };
 
+      let otpBusy = false;
+      const closeBtn = document.getElementById("otp-modal-close");
       const startResendTimer = () => {
         if (resendBtn) {
           resendBtn.disabled = true;
-          let countdown = 30;
+          if (otpResendTimer) clearInterval(otpResendTimer);
+          let countdown = 60;
+          document.getElementById("otp-resend-wrapper").classList.remove("d-none");
           const timerEl = document.getElementById("otp-resend-timer");
           if (timerEl) timerEl.textContent = countdown;
 
@@ -1104,7 +1128,8 @@ if (typeof document !== "undefined") {
             if (timerEl) timerEl.textContent = countdown;
             if (countdown <= 0) {
               clearInterval(otpResendTimer);
-              resendBtn.disabled = false;
+              otpResendTimer = null;
+              resendBtn.disabled = otpBusy;
             }
           }, 1000);
         }
@@ -1113,6 +1138,7 @@ if (typeof document !== "undefined") {
       // Send OTP
       if (sendBtn) {
         sendBtn.addEventListener("click", async () => {
+          if (otpBusy) return;
           const email = emailInput.value.trim();
 
           if (!email) {
@@ -1131,32 +1157,36 @@ if (typeof document !== "undefined") {
           if (btnText) btnText.classList.add("d-none");
           if (spinner) spinner.classList.remove("d-none");
           sendBtn.disabled = true;
+          otpBusy = true;
+          closeBtn.disabled = true;
+          changeEmailBtn.disabled = true;
+          resendBtn.disabled = true;
 
           try {
-            const response = await fetch("/api/otp/send", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ email }),
+            const { error } = await getAuthClient().auth.signInWithOtp({
+              email: email.toLowerCase(), options: { shouldCreateUser: true },
             });
-
-            const data = await response.json();
-
-            if (data.success) {
-              otpVerifiedEmail = email.trim().toLowerCase();
+            if (!error) {
+              otpPendingEmail = email.toLowerCase();
+              codeInput.value = "";
               document.getElementById("otp-display-email").textContent = email;
               showOTPStep("code");
               startResendTimer();
               codeInput.focus();
             } else {
-              handleOTPResponse(false, data.error || "Failed to send OTP", "email");
+              handleOTPResponse(false, error.message || "Failed to send code", "email");
             }
           } catch (error) {
             console.error("OTP send error:", error);
-            handleOTPResponse(false, "Network error. Please try again.", "email");
+            handleOTPResponse(false, error.message || "Network error. Please try again.", "email");
           } finally {
             if (btnText) btnText.classList.remove("d-none");
             if (spinner) spinner.classList.add("d-none");
             sendBtn.disabled = false;
+            otpBusy = false;
+            closeBtn.disabled = false;
+            changeEmailBtn.disabled = false;
+            if (!otpResendTimer) resendBtn.disabled = false;
           }
         });
       }
@@ -1164,6 +1194,7 @@ if (typeof document !== "undefined") {
       // Verify OTP
       if (verifyBtn) {
         verifyBtn.addEventListener("click", async () => {
+          if (otpBusy) return;
           const code = codeInput.value.trim();
 
           if (!code || code.length !== 6 || !/^\d+$/.test(code)) {
@@ -1176,29 +1207,34 @@ if (typeof document !== "undefined") {
           if (btnText) btnText.classList.add("d-none");
           if (spinner) spinner.classList.remove("d-none");
           verifyBtn.disabled = true;
+          otpBusy = true;
+          closeBtn.disabled = true;
+          changeEmailBtn.disabled = true;
+          resendBtn.disabled = true;
 
           try {
-            const response = await fetch("/api/otp/verify", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ email: otpVerifiedEmail, otp_code: code }),
+            const { data, error } = await getAuthClient().auth.verifyOtp({
+              email: otpPendingEmail, token: code, type: "email",
             });
-
-            const data = await response.json();
-
-            if (data.success) {
-              otpVerificationToken = data.token;
+            if (!error && data.session) {
+              authSession = data.session;
+              otpVerifiedEmail = data.session.user.email.toLowerCase();
+              if (otpResendTimer) clearInterval(otpResendTimer);
               showOTPStep("success");
             } else {
-              handleOTPResponse(false, data.error || "Failed to verify OTP", "code");
+              handleOTPResponse(false, error?.message || "Failed to verify code", "code");
             }
           } catch (error) {
             console.error("OTP verify error:", error);
-            handleOTPResponse(false, "Network error. Please try again.", "code");
+            handleOTPResponse(false, error.message || "Network error. Please try again.", "code");
           } finally {
             if (btnText) btnText.classList.remove("d-none");
             if (spinner) spinner.classList.add("d-none");
             verifyBtn.disabled = false;
+            otpBusy = false;
+            closeBtn.disabled = false;
+            changeEmailBtn.disabled = false;
+            if (!otpResendTimer) resendBtn.disabled = false;
           }
         });
       }
@@ -1207,7 +1243,6 @@ if (typeof document !== "undefined") {
       if (resendBtn) {
         resendBtn.addEventListener("click", async () => {
           sendBtn.click();
-          document.getElementById("otp-resend-wrapper").classList.add("d-none");
         });
       }
 
@@ -1215,6 +1250,8 @@ if (typeof document !== "undefined") {
       if (changeEmailBtn) {
         changeEmailBtn.addEventListener("click", () => {
           if (otpResendTimer) clearInterval(otpResendTimer);
+          otpResendTimer = null;
+          otpPendingEmail = null;
           emailInput.value = "";
           codeInput.value = "";
           document.getElementById("otp-email-error").classList.add("d-none");
@@ -1231,6 +1268,11 @@ if (typeof document !== "undefined") {
       if (continueBtn) {
         continueBtn.addEventListener("click", () => {
           if (otpResendTimer) clearInterval(otpResendTimer);
+          const formEmail = document.getElementById("email");
+          if (authSession && otpVerifiedEmail && formEmail) {
+            formEmail.value = otpVerifiedEmail;
+            formEmail.dispatchEvent(new Event("input", { bubbles: true }));
+          }
           modalManager.hide("otpModal");
           resumeAfterOTPVerification();
         });
@@ -2228,9 +2270,7 @@ if (typeof document !== "undefined") {
       formData.set("screen-resolution", screenResStr);
       formData.set("referrer", referrerStr);
 
-      if (otpVerificationToken) {
-        formData.set("otp_token", otpVerificationToken);
-      }
+
 
       return { formData, uniqueID, submissionTime };
     }
@@ -2281,13 +2321,15 @@ if (typeof document !== "undefined") {
         const { formData } = prepareNetlifyFormData(form);
         // Ensure Netlify picks up this form and all fields
         formData.set("form-name", "subscription-form");
+        ["otp_token", "access_token", "refresh_token"].forEach((key) => formData.delete(key));
         const payload = Object.fromEntries(formData.entries());
 
-        // Supabase-backed verification is the authorization gate. Never let
-        // Netlify Forms persist a submission until this endpoint succeeds.
+        // Validate the session before the app sends its separate Netlify Forms capture.
+        // Direct Netlify Forms posts are not authenticated by this endpoint.
+        const session = await getVerifiedSession(payload.email);
         const validationResponse = await fetch("/submit-form", {
           method: "POST",
-          headers: { "Content-Type": "application/json", Accept: "application/json" },
+          headers: { "Content-Type": "application/json", Accept: "application/json", Authorization: `Bearer ${session.access_token}` },
           body: JSON.stringify(payload),
         });
         const validationData = await validationResponse.json().catch(() => ({}));
@@ -2302,8 +2344,7 @@ if (typeof document !== "undefined") {
           );
         }
 
-        // The signed OTP capability is only for server authorization and must
-        // not be stored in the durable Netlify Forms submission.
+        // Auth tokens travel only in the validation Authorization header.
         const encoded = new URLSearchParams();
         for (const [key, value] of formData.entries()) {
           if (key !== "otp_token") encoded.append(key, value);
@@ -2317,7 +2358,7 @@ if (typeof document !== "undefined") {
           throw new Error("Netlify could not save the submission. Please try again.");
         }
 
-        // The OTP capability token must never be persisted client-side
+        // Save display data only; Supabase manages its own session storage.
         const storedPayload = { ...payload };
         delete storedPayload.otp_token;
         sessionStorage.setItem("submissionData", JSON.stringify(storedPayload));
@@ -2353,20 +2394,6 @@ if (typeof document !== "undefined") {
     }
 
     // ---- Email verification gate helpers --------------------------------
-    const OTP_TOKEN_MAX_AGE_MS = 25 * 60 * 1000; // signed tokens expire server-side after 30 min
-
-    function decodeOtpTokenPayload(token) {
-      try {
-        const payloadPart = String(token || "").split(".")[0];
-        if (!payloadPart) return null;
-        const json = atob(payloadPart.replace(/-/g, "+").replace(/_/g, "/"));
-        const parsed = JSON.parse(json);
-        return parsed && typeof parsed === "object" ? parsed : null;
-      } catch {
-        return null;
-      }
-    }
-
     function clearOTPModalState() {
       if (otpResendTimer) {
         clearInterval(otpResendTimer);
@@ -2407,12 +2434,8 @@ if (typeof document !== "undefined") {
 
     function isEmailOTPVerifiedFor(formEmail) {
       const email = String(formEmail || "").trim().toLowerCase();
-      if (!email || !otpVerifiedEmail || otpVerifiedEmail !== email || !otpVerificationToken) {
-        return false;
-      }
-      const payload = decodeOtpTokenPayload(otpVerificationToken);
-      const issuedSec = payload ? Number(payload.iat) : 0;
-      return issuedSec > 0 && Date.now() - issuedSec * 1000 < OTP_TOKEN_MAX_AGE_MS;
+      return Boolean(email && otpVerifiedEmail === email &&
+        authSession?.user?.email_confirmed_at && authSession.expires_at * 1000 > Date.now());
     }
 
     function requestEmailVerification() {
@@ -2447,7 +2470,7 @@ if (typeof document !== "undefined") {
       emailInput.addEventListener("input", () => {
         const current = emailInput.value.trim().toLowerCase();
         if (otpVerifiedEmail && otpVerifiedEmail !== current) {
-          otpVerificationToken = null;
+          authSession = null;
           otpVerifiedEmail = null;
         }
       });
