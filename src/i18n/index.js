@@ -1,5 +1,6 @@
 import translations from './translations.js';
 import { getGeoProfile, initializeGeoAutofill } from '../geo-autofill.js';
+import '../flow-orchestrator.js';
 
 const LANGUAGE_READY_EVENT = 'hybe:language-ready';
 const LANGUAGE_PROMPT_CLOSED_EVENT = 'hybe:language-prompt-closed';
