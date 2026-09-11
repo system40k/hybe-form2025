@@ -322,6 +322,62 @@ textarea.form-control {
   transition: width 0.3s ease-in-out;
 }
 
+/* Wizard controls are intentionally denser than general form actions. */
+.step-indicators {
+  display: grid !important;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 6px;
+  width: 100%;
+  align-items: stretch;
+}
+
+.step-indicator.btn {
+  min-width: 0;
+  min-height: 34px;
+  padding: 0.35rem 0.45rem;
+  font-size: 0.76rem;
+  line-height: 1.1;
+  white-space: normal;
+  overflow-wrap: normal;
+}
+
+.step-indicator.active {
+  font-weight: 600;
+}
+
+.wizard-nav {
+  display: grid;
+  grid-template-columns: minmax(76px, 1fr) auto minmax(76px, 1fr);
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  margin-top: 1rem;
+}
+
+.wizard-nav .btn {
+  width: auto;
+  min-width: 76px;
+  max-width: 128px;
+  min-height: 40px;
+  padding: 0.45rem 0.8rem;
+  font-size: 0.88rem;
+  line-height: 1.15;
+}
+
+#prev-btn { justify-self: start; }
+#next-btn { justify-self: end; }
+
+#wizard-status {
+  justify-self: center;
+  min-width: 78px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  line-height: 1.2;
+  text-align: center;
+  white-space: nowrap;
+  color: var(--muted);
+}
+
 footer.bg-gradient { background: var(--footer-gradient); color: #fff; }
 footer { padding-bottom: env(safe-area-inset-bottom); }
 footer a[lang="ko"] { font-family: "Noto Sans KR", sans-serif; margin-left: 5px; }
@@ -530,6 +586,29 @@ noscript .container {
     font-size: 0.9rem;
   }
 
+  .step-indicator.btn {
+    min-height: 32px;
+    padding: 0.3rem 0.3rem;
+    font-size: 0.7rem;
+  }
+
+  .wizard-nav {
+    grid-template-columns: minmax(72px, 1fr) auto minmax(72px, 1fr);
+    gap: 8px;
+  }
+
+  .wizard-nav .btn {
+    min-width: 72px;
+    min-height: 38px;
+    padding: 0.4rem 0.65rem;
+    font-size: 0.84rem;
+  }
+
+  #wizard-status {
+    min-width: 74px;
+    font-size: 0.78rem;
+  }
+
   .form-label {
     font-size: 0.86rem;
   }
@@ -604,6 +683,35 @@ noscript .container {
     font-size: 1rem;
   }
 
+  .step-indicators {
+    gap: 4px;
+  }
+
+  .step-indicator.btn {
+    min-height: 30px;
+    padding: 0.25rem 0.2rem;
+    font-size: 0.64rem;
+  }
+
+  .wizard-nav {
+    grid-template-columns: 72px minmax(0, 1fr) 72px;
+    gap: 6px;
+  }
+
+  .wizard-nav .btn {
+    width: 72px;
+    min-width: 0;
+    max-width: none;
+    min-height: 36px;
+    padding: 0.35rem 0.45rem;
+    font-size: 0.8rem;
+  }
+
+  #wizard-status {
+    min-width: 0;
+    font-size: 0.74rem;
+  }
+
   .modal-dialog {
     width: calc(100vw - 16px);
     margin-inline: 8px;
@@ -644,6 +752,27 @@ noscript .container {
   .btn {
     padding-left: 0.7rem;
     padding-right: 0.7rem;
+  }
+
+  .wizard-nav {
+    grid-template-columns: 66px minmax(0, 1fr) 66px;
+    gap: 4px;
+  }
+
+  .wizard-nav .btn {
+    width: 66px;
+    min-height: 34px;
+    padding: 0.3rem 0.35rem;
+    font-size: 0.76rem;
+  }
+
+  #wizard-status {
+    font-size: 0.7rem;
+  }
+
+  .step-indicator.btn {
+    font-size: 0.6rem;
+    padding-inline: 0.15rem;
   }
 
   .modal-dialog {
