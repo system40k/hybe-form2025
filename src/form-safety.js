@@ -3,13 +3,29 @@ const LEGACY_PROMPT_KEY = 'hybe-language-prompt-accepted';
 const AUTHORITATIVE_LANGUAGE_KEY = 'hybe_preferred_language';
 
 function suppressLegacyLanguagePrompt() {
-  // script.js checks this legacy flag before starting its own IP lookup/prompt.
-  // Mark it handled before DOMContentLoaded so src/i18n is the only language authority.
   try {
     localStorage.setItem(LEGACY_PROMPT_KEY, 'true');
     const preferred = localStorage.getItem(AUTHORITATIVE_LANGUAGE_KEY);
     if (preferred) localStorage.setItem(LEGACY_LANGUAGE_KEY, preferred);
   } catch {}
+}
+
+function installSharedGeoFetchAdapter() {
+  if (typeof window === 'undefined' || window.__hybeSharedGeoFetchInstalled) return;
+  const nativeFetch = window.fetch.bind(window);
+
+  window.fetch = (input, init) => {
+    const raw = typeof input === 'string' ? input : input?.url || '';
+    if (raw.startsWith('https://ipapi.co/json/') || raw.startsWith('https://ipwho.is/')) {
+      return nativeFetch('/api/ipinfo', init);
+    }
+    if (raw.startsWith('https://restcountries.com/v3.1/all')) {
+      return nativeFetch('/api/countries', init);
+    }
+    return nativeFetch(input, init);
+  };
+
+  window.__hybeSharedGeoFetchInstalled = true;
 }
 
 function installAddressWrapperGuard() {
@@ -27,8 +43,6 @@ function installAddressWrapperGuard() {
 
   addressFields.appendChild = (node) => {
     if (node?.nodeType === Node.ELEMENT_NODE && guardedIds.has(node.id)) {
-      // Preserve each input inside its original label/layout wrapper. Legacy
-      // country formatting may still update labels/placeholders/validation.
       return node;
     }
     return originalAppendChild(node);
@@ -55,14 +69,10 @@ function installCountryChangeGuard() {
     }
 
     queueMicrotask(() => {
-      // Never allow delayed geo/programmatic callbacks to replace a user's
-      // explicit country choice.
       if (!event.isTrusted && manualCountry && countrySelect.value !== manualCountry) {
         countrySelect.value = manualCountry;
       }
 
-      // Country changes may update the displayed dial prefix, but must never
-      // erase or silently rewrite a number the user already entered.
       if (userPhone && phoneInput.value !== userPhone) {
         phoneInput.value = userPhone;
         try {
@@ -72,8 +82,6 @@ function installCountryChangeGuard() {
         } catch {}
       }
 
-      // Remove the legacy country-specific formatter installed by script.js;
-      // the user's typed representation should remain untouched.
       phoneInput.oninput = null;
     });
   }, true);
@@ -87,11 +95,10 @@ export function initializeFormSafety() {
   installCountryChangeGuard();
 }
 
+installSharedGeoFetchAdapter();
 suppressLegacyLanguagePrompt();
 
 if (typeof document !== 'undefined') {
-  // Run before script.js DOMContentLoaded listeners because this module is
-  // imported by the earlier-loaded i18n entrypoint.
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', initializeFormSafety, { once: true });
   } else {
