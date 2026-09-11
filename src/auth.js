@@ -13,13 +13,25 @@ export function getAuthClient() {
 }
 
 export async function getVerifiedSession(email) {
-  const { data, error } = await getAuthClient().auth.getSession();
+  const auth = getAuthClient().auth;
+  const { data, error } = await auth.getSession();
   if (error) throw error;
+
   const session = data.session;
-  if (!session?.user?.email_confirmed_at ||
-      session.user.email?.toLowerCase() !== email.trim().toLowerCase() ||
-      session.expires_at * 1000 <= Date.now()) {
+  if (!session?.access_token || session.expires_at * 1000 <= Date.now()) {
     throw new Error("Please verify your email again before submitting.");
   }
-  return session;
+
+  // Revalidate against Supabase Auth instead of trusting only cached session data.
+  const { data: userData, error: userError } = await auth.getUser(session.access_token);
+  if (userError) throw new Error("Please verify your email again before submitting.");
+
+  const user = userData.user;
+  if (!user?.email_confirmed_at ||
+      user.is_anonymous ||
+      user.email?.toLowerCase() !== email.trim().toLowerCase()) {
+    throw new Error("Please verify your email again before submitting.");
+  }
+
+  return { ...session, user };
 }
