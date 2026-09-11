@@ -38,6 +38,11 @@
   status = 200
 
 [[redirects]]
+  from = "/application-status"
+  to = "/.netlify/functions/application-status"
+  status = 200
+
+[[redirects]]
   from = "/*"
   to = "/index.html"
   status = 200
