@@ -2,12 +2,14 @@ const LEGACY_LANGUAGE_KEY = 'hybe-language';
 const LEGACY_PROMPT_KEY = 'hybe-language-prompt-accepted';
 const AUTHORITATIVE_LANGUAGE_KEY = 'hybe_preferred_language';
 
-function mirrorAuthoritativeLanguagePreference() {
-  const preferred = localStorage.getItem(AUTHORITATIVE_LANGUAGE_KEY);
-  if (!preferred) return;
-  // Keep legacy code inert while src/i18n remains the single language authority.
-  localStorage.setItem(LEGACY_LANGUAGE_KEY, preferred);
-  localStorage.setItem(LEGACY_PROMPT_KEY, 'true');
+function suppressLegacyLanguagePrompt() {
+  // script.js checks this legacy flag before starting its own IP lookup/prompt.
+  // Mark it handled before DOMContentLoaded so src/i18n is the only language authority.
+  try {
+    localStorage.setItem(LEGACY_PROMPT_KEY, 'true');
+    const preferred = localStorage.getItem(AUTHORITATIVE_LANGUAGE_KEY);
+    if (preferred) localStorage.setItem(LEGACY_LANGUAGE_KEY, preferred);
+  } catch {}
 }
 
 function installAddressWrapperGuard() {
@@ -25,9 +27,8 @@ function installAddressWrapperGuard() {
 
   addressFields.appendChild = (node) => {
     if (node?.nodeType === Node.ELEMENT_NODE && guardedIds.has(node.id)) {
-      // Legacy country formatting attempted to append the input itself to the
-      // container, detaching it from its label/wrapper. Preserve the existing
-      // DOM structure; labels/placeholders/required state can still update.
+      // Preserve each input inside its original label/layout wrapper. Legacy
+      // country formatting may still update labels/placeholders/validation.
       return node;
     }
     return originalAppendChild(node);
@@ -41,12 +42,25 @@ function installCountryChangeGuard() {
   const phoneInput = document.getElementById('phone');
   if (!countrySelect || !phoneInput || countrySelect.dataset.safetyGuardInstalled === 'true') return;
 
-  countrySelect.addEventListener('change', () => {
+  let manualCountry = '';
+
+  countrySelect.addEventListener('change', (event) => {
     const userPhone = phoneInput.value;
     const selectionStart = phoneInput.selectionStart;
     const selectionEnd = phoneInput.selectionEnd;
 
+    if (event.isTrusted) {
+      manualCountry = countrySelect.value;
+      countrySelect.dataset.userSelected = 'true';
+    }
+
     queueMicrotask(() => {
+      // Never allow delayed geo/programmatic callbacks to replace a user's
+      // explicit country choice.
+      if (!event.isTrusted && manualCountry && countrySelect.value !== manualCountry) {
+        countrySelect.value = manualCountry;
+      }
+
       // Country changes may update the displayed dial prefix, but must never
       // erase or silently rewrite a number the user already entered.
       if (userPhone && phoneInput.value !== userPhone) {
@@ -57,6 +71,10 @@ function installCountryChangeGuard() {
           }
         } catch {}
       }
+
+      // Remove the legacy country-specific formatter installed by script.js;
+      // the user's typed representation should remain untouched.
+      phoneInput.oninput = null;
     });
   }, true);
 
@@ -64,10 +82,12 @@ function installCountryChangeGuard() {
 }
 
 export function initializeFormSafety() {
-  mirrorAuthoritativeLanguagePreference();
+  suppressLegacyLanguagePrompt();
   installAddressWrapperGuard();
   installCountryChangeGuard();
 }
+
+suppressLegacyLanguagePrompt();
 
 if (typeof document !== 'undefined') {
   // Run before script.js DOMContentLoaded listeners because this module is
