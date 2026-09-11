@@ -1,376 +1,166 @@
 import translations from './translations.js';
+import { getGeoProfile, initializeGeoAutofill } from '../geo-autofill.js';
+import '../flow-orchestrator.js';
 
-// Language detection and auto-translation system
+const LANGUAGE_READY_EVENT = 'hybe:language-ready';
+const LANGUAGE_PROMPT_CLOSED_EVENT = 'hybe:language-prompt-closed';
+
+function publishLanguageState(promptOpen, language) {
+  window.__hybeLanguageState = {
+    ready: true,
+    promptOpen: Boolean(promptOpen),
+    language: language || 'ko',
+  };
+}
+
 class LanguageDetector {
   constructor() {
-    this.currentLang = 'ko'; // Default to Korean
+    this.currentLang = 'ko';
     this.detectedLang = null;
     this.supportedLanguages = ['ko', 'en', 'ja', 'zh', 'es', 'fr', 'de', 'pt', 'ru', 'th', 'vi', 'id'];
   }
 
-  /**
-   * Get browser language
-   */
   getBrowserLanguage() {
     const browserLang = navigator.language || navigator.userLanguage;
     if (!browserLang) return 'ko';
-    
-    // Extract base language code (e.g., 'en-US' -> 'en')
     const baseLang = browserLang.split('-')[0].toLowerCase();
-    
-    // Check if supported
-    if (this.supportedLanguages.includes(baseLang)) {
-      return baseLang;
-    }
-    
-    // Try to find partial match
+    if (this.supportedLanguages.includes(baseLang)) return baseLang;
     for (const code of this.supportedLanguages) {
-      if (browserLang.toLowerCase().startsWith(code)) {
-        return code;
-      }
+      if (browserLang.toLowerCase().startsWith(code)) return code;
     }
-    
-    return 'en'; // Fallback to English
+    return 'en';
   }
 
-  /**
-   * Detect country/language via IP (using free ipapi.co API)
-   */
-  async detectLanguageByIP() {
-    try {
-      const response = await fetch('https://ipapi.co/json/', {
-        method: 'GET',
-        headers: { 'Accept': 'application/json' },
-        // Add timeout
-        signal: AbortSignal.timeout(3000)
-      });
-      
-      if (!response.ok) throw new Error('IP detection failed');
-      
-      const data = await response.json();
-      const countryCode = data.country_code;
-      
-      // Map country codes to languages
-      const countryToLang = {
-        'KR': 'ko',
-        'US': 'en', 'GB': 'en', 'CA': 'en', 'AU': 'en', 'NZ': 'en',
-        'JP': 'ja',
-        'CN': 'zh', 'TW': 'zh', 'HK': 'zh', 'SG': 'zh',
-        'ES': 'es', 'MX': 'es', 'AR': 'es', 'CO': 'es',
-        'FR': 'fr', 'BE': 'fr', 'CH': 'fr',
-        'DE': 'de', 'AT': 'de',
-        'BR': 'pt', 'PT': 'pt',
-        'RU': 'ru',
-        'TH': 'th',
-        'VN': 'vi',
-        'ID': 'id'
-      };
-      
-      return countryToLang[countryCode] || null;
-    } catch (error) {
-      console.warn('IP language detection failed:', error.message);
-      return null;
-    }
-  }
-
-  /**
-   * Main detection logic - Combines Browser + IP detection
-   */
   async detect() {
-    // Step 1: Get browser language (most reliable for first-time visitors)
     const browserLang = this.getBrowserLanguage();
-    this.detectedLang = browserLang;
-
-    // Step 2: ALSO check IP-based detection for ALL non-Korean users
-    // This catches travelers or users with misconfigured browsers
-    // We check IP for ANY non-Korean language to ensure accuracy
-    if (browserLang !== 'ko') {
-      const ipLang = await this.detectLanguageByIP();
-      
-      if (ipLang) {
-        // If IP detection returns a result, use it as primary
-        // IP is more accurate for geographic targeting
-        this.detectedLang = ipLang;
-      }
-      // If IP fails or returns null, keep browser language as fallback
-    }
-
+    const geo = await getGeoProfile();
+    const geoLang = geo?.language;
+    this.detectedLang = geoLang && this.supportedLanguages.includes(geoLang) ? geoLang : browserLang;
     return this.detectedLang;
   }
 
-  /**
-   * Show language prompt modal if detected language is not Korean
-   */
   showLanguagePrompt() {
-    // Don't show prompt if detected language is Korean or already set
     if (this.detectedLang === 'ko' || this.currentLang !== 'ko') {
+      publishLanguageState(false, this.currentLang);
+      window.dispatchEvent(new CustomEvent(LANGUAGE_PROMPT_CLOSED_EVENT));
       return;
     }
+    if (document.getElementById('language-prompt-modal')) return;
 
+    publishLanguageState(true, this.detectedLang);
     const detectedLangName = this.getNativeLanguageName(this.detectedLang);
     const t = (key) => this.translate(key, this.detectedLang);
-
     const modalHTML = `
-      <div id="language-prompt-modal" class="language-prompt-modal" role="dialog" aria-modal="true">
+      <div id="language-prompt-modal" class="language-prompt-modal" role="dialog" aria-modal="true" aria-labelledby="language-prompt-title">
         <div class="language-prompt-content">
-          <h3>${t('lang.promptTitle')}</h3>
+          <h3 id="language-prompt-title">${t('lang.promptTitle')}</h3>
           <p>${t('lang.promptMessage').replace('{language}', `<strong>${detectedLangName}</strong>`)}</p>
           <div class="language-prompt-buttons">
-            <button id="lang-yes-btn" class="btn-primary">${t('lang.acceptButton')}</button>
-            <button id="lang-no-btn" class="btn-secondary">${t('lang.declineButton')}</button>
+            <button id="lang-yes-btn" type="button" class="btn btn-primary">${t('lang.acceptButton')}</button>
+            <button id="lang-no-btn" type="button" class="btn btn-outline-secondary">${t('lang.declineButton')}</button>
           </div>
         </div>
-      </div>
-    `;
-
+      </div>`;
     document.body.insertAdjacentHTML('beforeend', modalHTML);
 
-    // Add styles if not already present
     if (!document.getElementById('lang-prompt-styles')) {
       const style = document.createElement('style');
       style.id = 'lang-prompt-styles';
       style.textContent = `
-        .language-prompt-modal {
-          position: fixed;
-          top: 0;
-          left: 0;
-          width: 100%;
-          height: 100%;
-          background: rgba(0, 0, 0, 0.7);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          z-index: 10000;
-          animation: fadeIn 0.3s ease;
-        }
-        .language-prompt-content {
-          background: white;
-          padding: 2rem;
-          border-radius: 12px;
-          max-width: 400px;
-          text-align: center;
-          box-shadow: 0 10px 40px rgba(0,0,0,0.2);
-        }
-        .language-prompt-content h3 {
-          margin: 0 0 1rem;
-          font-size: 1.5rem;
-          color: #000;
-        }
-        .language-prompt-content p {
-          margin: 0 0 1.5rem;
-          line-height: 1.6;
-          color: #555;
-        }
-        .language-prompt-buttons {
-          display: flex;
-          gap: 1rem;
-          justify-content: center;
-        }
-        .btn-primary, .btn-secondary {
-          padding: 0.75rem 1.5rem;
-          border: none;
-          border-radius: 8px;
-          font-size: 1rem;
-          cursor: pointer;
-          transition: all 0.2s;
-        }
-        .btn-primary {
-          background: #0066FF;
-          color: white;
-        }
-        .btn-primary:hover {
-          background: #0052CC;
-        }
-        .btn-secondary {
-          background: #f0f0f0;
-          color: #333;
-        }
-        .btn-secondary:hover {
-          background: #e0e0e0;
-        }
-        @keyframes fadeIn {
-          from { opacity: 0; }
-          to { opacity: 1; }
-        }
-        @keyframes fadeOut {
-          from { opacity: 1; }
-          to { opacity: 0; }
-        }
+        .language-prompt-modal{position:fixed;inset:0;background:rgba(0,0,0,.62);display:flex;align-items:center;justify-content:center;z-index:1085;padding:1rem}
+        .language-prompt-content{background:#fff;color:#111;width:min(100%,400px);padding:1.5rem;border-radius:12px;box-shadow:0 20px 60px rgba(0,0,0,.25);text-align:center}
+        .language-prompt-content h3{margin:0 0 .75rem;font-size:1.35rem}.language-prompt-content p{margin:0 0 1.25rem;line-height:1.55;color:#555}
+        .language-prompt-buttons{display:flex;gap:.75rem;justify-content:center;flex-wrap:wrap}
+        @media(max-width:430px){.language-prompt-content{padding:1.25rem}.language-prompt-buttons>*{width:100%}}
       `;
       document.head.appendChild(style);
     }
 
-    // Event listeners
-    document.getElementById('lang-yes-btn').addEventListener('click', () => {
-      this.setLanguage(this.detectedLang);
+    const finish = (lang) => {
+      if (lang) this.setLanguage(lang);
       this.closePrompt();
-    });
-
-    document.getElementById('lang-no-btn').addEventListener('click', () => {
-      // Keep Korean - save preference explicitly
-      localStorage.setItem('hybe_preferred_language', 'ko');
-      this.closePrompt();
-    });
+    };
+    document.getElementById('lang-yes-btn')?.addEventListener('click', () => finish(this.detectedLang), { once: true });
+    document.getElementById('lang-no-btn')?.addEventListener('click', () => finish('ko'), { once: true });
   }
 
   closePrompt() {
-    const modal = document.getElementById('language-prompt-modal');
-    if (modal) {
-      modal.style.animation = 'fadeOut 0.3s ease';
-      setTimeout(() => modal.remove(), 300);
-    }
+    document.getElementById('language-prompt-modal')?.remove();
+    publishLanguageState(false, this.currentLang);
+    window.dispatchEvent(new CustomEvent(LANGUAGE_PROMPT_CLOSED_EVENT));
   }
 
-  /**
-   * Set and apply language
-   */
   setLanguage(lang) {
-    if (!this.supportedLanguages.includes(lang)) {
-      console.warn(`Language ${lang} not supported`);
-      lang = 'ko';
-    }
-
+    if (!this.supportedLanguages.includes(lang)) lang = 'ko';
     this.currentLang = lang;
     localStorage.setItem('hybe_preferred_language', lang);
-    
-    // Update HTML lang attribute
     document.documentElement.lang = lang;
-    
-    // Apply translations to all elements with data-i18n attribute
     this.applyTranslations();
-
-    // Dispatch event for other components to react
     window.dispatchEvent(new CustomEvent('languageChanged', { detail: { lang: this.currentLang } }));
   }
 
-  /**
-   * Apply translations to all elements with data-i18n attribute
-   */
   applyTranslations() {
-    document.querySelectorAll('[data-i18n]').forEach(element => {
+    document.querySelectorAll('[data-i18n]').forEach((element) => {
       const key = element.getAttribute('data-i18n');
       const value = this.translate(key, this.currentLang);
-      
-      if (value) {
-        if (element.tagName === 'INPUT' || element.tagName === 'TEXTAREA') {
-          if (element.hasAttribute('placeholder')) {
-            element.placeholder = value;
-          } else {
-            element.value = value;
-          }
-        } else if (element.tagName === 'SELECT' && element.hasAttribute('aria-label')) {
-          // For select elements with aria-label, update aria-label only
-          element.setAttribute('aria-label', value);
-        } else {
-          // For other elements, only update textContent if it's not an option element
-          // Option elements keep their HTML content
-          if (element.tagName !== 'OPTION') {
-            element.textContent = value;
-          }
-        }
+      if (!value) return;
+      if (element.tagName === 'INPUT' || element.tagName === 'TEXTAREA') {
+        if (element.hasAttribute('placeholder')) element.placeholder = value;
+      } else if (element.tagName === 'SELECT' && element.hasAttribute('aria-label')) {
+        element.setAttribute('aria-label', value);
+      } else if (element.tagName !== 'OPTION') {
+        element.textContent = value;
       }
     });
-
-    // Update page title if there's a hero.title
     const pageTitle = this.translate('hero.title', this.currentLang);
-    if (pageTitle) {
-      document.title = pageTitle;
-    }
+    if (pageTitle) document.title = pageTitle;
   }
 
-  /**
-   * Translate a key to the specified language
-   */
   translate(key, lang = 'ko', params = {}) {
     const langTranslations = translations[lang] || translations.ko;
     let text = langTranslations[key] || translations.ko[key] || key;
-    
-    // Replace parameters like {seconds}, {language}
-    Object.keys(params).forEach(paramKey => {
-      text = text.replace(`{${paramKey}}`, params[paramKey]);
-    });
-    
+    Object.keys(params).forEach((paramKey) => { text = text.replace(`{${paramKey}}`, params[paramKey]); });
     return text;
   }
 
-  /**
-   * Get native language name
-   */
   getNativeLanguageName(lang) {
-    const langMap = {
-      ko: '한국어',
-      en: 'English',
-      ja: '日本語',
-      zh: '中文',
-      es: 'Español',
-      fr: 'Français',
-      de: 'Deutsch',
-      pt: 'Português',
-      ru: 'Русский',
-      th: 'ไทย',
-      vi: 'Tiếng Việt',
-      id: 'Bahasa Indonesia'
-    };
+    const langMap = { ko:'한국어', en:'English', ja:'日本語', zh:'中文', es:'Español', fr:'Français', de:'Deutsch', pt:'Português', ru:'Русский', th:'ไทย', vi:'Tiếng Việt', id:'Bahasa Indonesia' };
     return langMap[lang] || lang;
   }
 
-  /**
-   * Initialize language detection on page load
-   */
   async init() {
-    // ALWAYS start with Korean by default on every page load
     this.currentLang = 'ko';
     this.applyTranslations();
     document.documentElement.lang = 'ko';
-    
-    // Check if user has previously made a choice
+    initializeGeoAutofill().catch(() => null);
+
     const savedLang = localStorage.getItem('hybe_preferred_language');
-    const hasUserPreference = savedLang && this.supportedLanguages.includes(savedLang);
-    
-    // If user has saved preference, apply it immediately (no prompt)
-    if (hasUserPreference) {
+    const hasPreference = savedLang && this.supportedLanguages.includes(savedLang);
+    if (hasPreference) {
       this.setLanguage(savedLang);
+      publishLanguageState(false, savedLang);
+      window.dispatchEvent(new CustomEvent(LANGUAGE_READY_EVENT, { detail: { prompted: false, language: savedLang } }));
       return;
     }
-    
-    // No saved preference - detect user's language via browser AND IP
+
     await this.detect();
-    
-    // Show prompt ONLY if detected language is not Korean
-    // This ensures Korean users see Korean, others get prompted
-    if (this.detectedLang && this.detectedLang !== 'ko') {
-      // Small delay to ensure page is fully loaded
-      setTimeout(() => this.showLanguagePrompt(), 800);
-    }
+    const shouldPrompt = Boolean(this.detectedLang && this.detectedLang !== 'ko');
+    publishLanguageState(shouldPrompt, this.detectedLang || 'ko');
+    window.dispatchEvent(new CustomEvent(LANGUAGE_READY_EVENT, { detail: { prompted: shouldPrompt, language: this.detectedLang || 'ko' } }));
+    if (shouldPrompt) this.showLanguagePrompt();
   }
 
-  /**
-   * Get current language
-   */
-  getCurrentLanguage() {
-    return this.currentLang;
-  }
+  getCurrentLanguage() { return this.currentLang; }
 }
 
-// Create singleton instance
 export const languageDetector = new LanguageDetector();
+export const t = (key, lang = languageDetector.getCurrentLanguage(), params = {}) => languageDetector.translate(key, lang, params);
+export const getNativeLanguageName = (lang) => languageDetector.getNativeLanguageName(lang);
+export { LANGUAGE_READY_EVENT, LANGUAGE_PROMPT_CLOSED_EVENT };
 
-// Export translation function for backward compatibility
-export const t = (key, lang = languageDetector.getCurrentLanguage(), params = {}) => {
-  return languageDetector.translate(key, lang, params);
-};
-
-export const getNativeLanguageName = (lang) => {
-  return languageDetector.getNativeLanguageName(lang);
-};
-
-// Auto-initialize on DOM ready
 if (typeof document !== 'undefined') {
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', () => languageDetector.init());
-  } else {
-    languageDetector.init();
-  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', () => languageDetector.init(), { once: true });
+  else languageDetector.init();
 }
 
 export default languageDetector;
