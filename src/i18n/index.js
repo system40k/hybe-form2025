@@ -1,5 +1,6 @@
 import translations from './translations.js';
 import { getGeoProfile, initializeGeoAutofill } from '../geo-autofill.js';
+import '../form-safety.js';
 import '../flow-orchestrator.js';
 
 const LANGUAGE_READY_EVENT = 'hybe:language-ready';
@@ -18,6 +19,7 @@ class LanguageDetector {
     this.currentLang = 'ko';
     this.detectedLang = null;
     this.supportedLanguages = ['ko', 'en', 'ja', 'zh', 'es', 'fr', 'de', 'pt', 'ru', 'th', 'vi', 'id'];
+    this.selectorBound = false;
   }
 
   getBrowserLanguage() {
@@ -37,6 +39,37 @@ class LanguageDetector {
     const geoLang = geo?.language;
     this.detectedLang = geoLang && this.supportedLanguages.includes(geoLang) ? geoLang : browserLang;
     return this.detectedLang;
+  }
+
+  bindLanguageSelector() {
+    if (this.selectorBound) return;
+    const selector = document.getElementById('language-switcher');
+    if (!selector) return;
+
+    selector.addEventListener('change', (event) => {
+      // Prevent the legacy script.js selector handler from becoming a second
+      // language authority. This module owns preference + translation state.
+      event.stopImmediatePropagation();
+      const selected = selector.value;
+      if (selected === 'auto') {
+        localStorage.removeItem('hybe_preferred_language');
+        this.currentLang = 'ko';
+        this.applyTranslations();
+        this.detect().then((lang) => {
+          if (lang && lang !== 'ko') this.showLanguagePrompt();
+          else this.setLanguage('ko');
+        }).catch(() => this.setLanguage('ko'));
+        return;
+      }
+      this.setLanguage(selected);
+    });
+
+    this.selectorBound = true;
+  }
+
+  syncSelector() {
+    const selector = document.getElementById('language-switcher');
+    if (selector && selector.value !== this.currentLang) selector.value = this.currentLang;
   }
 
   showLanguagePrompt() {
@@ -94,9 +127,12 @@ class LanguageDetector {
     if (!this.supportedLanguages.includes(lang)) lang = 'ko';
     this.currentLang = lang;
     localStorage.setItem('hybe_preferred_language', lang);
+    // Mirror only for backward compatibility; script.js no longer controls selection.
+    localStorage.setItem('hybe-language', lang);
+    localStorage.setItem('hybe-language-prompt-accepted', 'true');
     document.documentElement.lang = lang;
     this.applyTranslations();
-    window.dispatchEvent(new CustomEvent('languageChanged', { detail: { lang: this.currentLang } }));
+    this.syncSelector();
   }
 
   applyTranslations() {
@@ -129,6 +165,7 @@ class LanguageDetector {
   }
 
   async init() {
+    this.bindLanguageSelector();
     this.currentLang = 'ko';
     this.applyTranslations();
     document.documentElement.lang = 'ko';
