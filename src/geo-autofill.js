@@ -1,12 +1,18 @@
-const GEO_CACHE_KEY = "hybe:geo-profile:v1";
+const GEO_CACHE_KEY = "hybe:geo-profile:v2";
+const GEO_READY_EVENT = "hybe:geo-ready";
+
+const countryToLanguage = {
+  KR: "ko", US: "en", GB: "en", CA: "en", AU: "en", NZ: "en",
+  JP: "ja", CN: "zh", TW: "zh", HK: "zh", SG: "zh",
+  ES: "es", MX: "es", AR: "es", CO: "es",
+  FR: "fr", BE: "fr", CH: "fr", DE: "de", AT: "de",
+  BR: "pt", PT: "pt", RU: "ru", TH: "th", VN: "vi", ID: "id",
+};
 
 function readCachedGeo() {
   try {
     const raw = sessionStorage.getItem(GEO_CACHE_KEY);
-    if (!raw) return null;
-    const parsed = JSON.parse(raw);
-    if (!parsed || typeof parsed !== "object") return null;
-    return parsed;
+    return raw ? JSON.parse(raw) : null;
   } catch {
     return null;
   }
@@ -15,9 +21,7 @@ function readCachedGeo() {
 function writeCachedGeo(profile) {
   try {
     sessionStorage.setItem(GEO_CACHE_KEY, JSON.stringify(profile));
-  } catch {
-    // Session storage may be unavailable in privacy modes; detection still works.
-  }
+  } catch {}
 }
 
 async function fetchJson(url, timeoutMs = 3500) {
@@ -38,17 +42,34 @@ async function fetchJson(url, timeoutMs = 3500) {
 }
 
 function normalizeProfile(data) {
-  const countryCode = String(data?.country_code || data?.country_code_iso2 || "")
-    .trim()
-    .toUpperCase();
+  const countryCode = String(data?.country_code || data?.country_code_iso2 || "").trim().toUpperCase();
   if (!/^[A-Z]{2}$/.test(countryCode)) return null;
-
   return {
     countryCode,
+    language: countryToLanguage[countryCode] || null,
     city: String(data?.city || "").trim(),
     region: String(data?.region || data?.region_name || "").trim(),
     postal: String(data?.postal || data?.postal_code || "").trim(),
   };
+}
+
+export async function getGeoProfile() {
+  const cached = readCachedGeo();
+  if (cached?.countryCode) return cached;
+
+  try {
+    const profile = normalizeProfile(await fetchJson("/api/ipinfo"));
+    if (profile) writeCachedGeo(profile);
+    return profile;
+  } catch {
+    try {
+      const profile = normalizeProfile(await fetchJson("https://ipwho.is/", 3000));
+      if (profile) writeCachedGeo(profile);
+      return profile;
+    } catch {
+      return null;
+    }
+  }
 }
 
 function setIfEmpty(id, value) {
@@ -60,43 +81,11 @@ function setIfEmpty(id, value) {
   }
 }
 
-function applyProfile(profile) {
-  if (!profile) return false;
-
-  const countrySelect = document.getElementById("country-select");
-  if (!countrySelect) return false;
-
-  const matchingOption = Array.from(countrySelect.options).find(
-    (option) => String(option.value || "").toUpperCase() === profile.countryCode,
-  );
-  if (!matchingOption) return false;
-
-  // Only auto-select when the user has not already chosen a country.
-  if (!countrySelect.dataset.userSelected && !countrySelect.value) {
-    countrySelect.value = matchingOption.value;
-    countrySelect.dispatchEvent(new Event("change", { bubbles: true }));
-  }
-
-  // Never overwrite typed address data.
-  setIfEmpty("city", profile.city);
-  setIfEmpty("state", profile.region);
-  setIfEmpty("postal-code", profile.postal);
-  return true;
-}
-
 function waitForCountries(timeoutMs = 5000) {
   return new Promise((resolve) => {
     const countrySelect = document.getElementById("country-select");
-    if (!countrySelect) {
-      resolve(null);
-      return;
-    }
-
-    if (countrySelect.options.length > 1) {
-      resolve(countrySelect);
-      return;
-    }
-
+    if (!countrySelect) return resolve(null);
+    if (countrySelect.options.length > 1) return resolve(countrySelect);
     const started = Date.now();
     const timer = setInterval(() => {
       if (countrySelect.options.length > 1 || Date.now() - started >= timeoutMs) {
@@ -107,47 +96,41 @@ function waitForCountries(timeoutMs = 5000) {
   });
 }
 
-async function detectCountry() {
-  const cached = readCachedGeo();
-  if (cached) return cached;
+function applyProfile(profile) {
+  if (!profile) return false;
+  const countrySelect = document.getElementById("country-select");
+  if (!countrySelect) return false;
 
-  try {
-    const data = await fetchJson("/api/ipinfo");
-    const profile = normalizeProfile(data);
-    if (profile) writeCachedGeo(profile);
-    return profile;
-  } catch {
-    // Same-origin proxy should be preferred, but keep a graceful public fallback.
-    try {
-      const data = await fetchJson("https://ipwho.is/", 3000);
-      const profile = normalizeProfile(data);
-      if (profile) writeCachedGeo(profile);
-      return profile;
-    } catch {
-      return null;
-    }
+  const matchingOption = Array.from(countrySelect.options).find(
+    (option) => String(option.value || "").toUpperCase() === profile.countryCode,
+  );
+  if (!matchingOption) return false;
+
+  if (!countrySelect.dataset.userSelected && !countrySelect.value) {
+    countrySelect.value = matchingOption.value;
+    countrySelect.dispatchEvent(new CustomEvent("change", { bubbles: true, detail: { source: "geo" } }));
   }
+
+  setIfEmpty("city", profile.city);
+  setIfEmpty("state", profile.region);
+  setIfEmpty("postal-code", profile.postal);
+  return true;
 }
 
-async function initializeGeoAutofill() {
+export async function initializeGeoAutofill() {
   const countrySelect = document.getElementById("country-select");
-  if (!countrySelect) return;
+  if (!countrySelect) return null;
 
   countrySelect.addEventListener("change", (event) => {
     if (event.isTrusted) countrySelect.dataset.userSelected = "true";
   });
 
-  const [profile] = await Promise.all([detectCountry(), waitForCountries()]);
-  if (!profile) return;
-
-  if (!applyProfile(profile)) {
-    // Country options may still be arriving from the countries API.
-    setTimeout(() => applyProfile(profile), 800);
+  const [profile] = await Promise.all([getGeoProfile(), waitForCountries()]);
+  if (profile) {
+    if (!applyProfile(profile)) setTimeout(() => applyProfile(profile), 800);
+    window.dispatchEvent(new CustomEvent(GEO_READY_EVENT, { detail: profile }));
   }
+  return profile;
 }
 
-if (document.readyState === "loading") {
-  document.addEventListener("DOMContentLoaded", initializeGeoAutofill, { once: true });
-} else {
-  initializeGeoAutofill();
-}
+export { countryToLanguage, GEO_READY_EVENT };
