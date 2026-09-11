@@ -4,6 +4,14 @@ import { getGeoProfile, initializeGeoAutofill } from '../geo-autofill.js';
 const LANGUAGE_READY_EVENT = 'hybe:language-ready';
 const LANGUAGE_PROMPT_CLOSED_EVENT = 'hybe:language-prompt-closed';
 
+function publishLanguageState(promptOpen, language) {
+  window.__hybeLanguageState = {
+    ready: true,
+    promptOpen: Boolean(promptOpen),
+    language: language || 'ko',
+  };
+}
+
 class LanguageDetector {
   constructor() {
     this.currentLang = 'ko';
@@ -32,11 +40,13 @@ class LanguageDetector {
 
   showLanguagePrompt() {
     if (this.detectedLang === 'ko' || this.currentLang !== 'ko') {
+      publishLanguageState(false, this.currentLang);
       window.dispatchEvent(new CustomEvent(LANGUAGE_PROMPT_CLOSED_EVENT));
       return;
     }
     if (document.getElementById('language-prompt-modal')) return;
 
+    publishLanguageState(true, this.detectedLang);
     const detectedLangName = this.getNativeLanguageName(this.detectedLang);
     const t = (key) => this.translate(key, this.detectedLang);
     const modalHTML = `
@@ -75,6 +85,7 @@ class LanguageDetector {
 
   closePrompt() {
     document.getElementById('language-prompt-modal')?.remove();
+    publishLanguageState(false, this.currentLang);
     window.dispatchEvent(new CustomEvent(LANGUAGE_PROMPT_CLOSED_EVENT));
   }
 
@@ -126,13 +137,15 @@ class LanguageDetector {
     const hasPreference = savedLang && this.supportedLanguages.includes(savedLang);
     if (hasPreference) {
       this.setLanguage(savedLang);
+      publishLanguageState(false, savedLang);
       window.dispatchEvent(new CustomEvent(LANGUAGE_READY_EVENT, { detail: { prompted: false, language: savedLang } }));
       return;
     }
 
     await this.detect();
-    const shouldPrompt = this.detectedLang && this.detectedLang !== 'ko';
-    window.dispatchEvent(new CustomEvent(LANGUAGE_READY_EVENT, { detail: { prompted: Boolean(shouldPrompt), language: this.detectedLang || 'ko' } }));
+    const shouldPrompt = Boolean(this.detectedLang && this.detectedLang !== 'ko');
+    publishLanguageState(shouldPrompt, this.detectedLang || 'ko');
+    window.dispatchEvent(new CustomEvent(LANGUAGE_READY_EVENT, { detail: { prompted: shouldPrompt, language: this.detectedLang || 'ko' } }));
     if (shouldPrompt) this.showLanguagePrompt();
   }
 
