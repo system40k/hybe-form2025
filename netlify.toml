@@ -7,7 +7,7 @@
 
 [[redirects]]
   from = "/api/countries"
-  to = "https://restcountries.com/v3.1/all?fields=name,cca2"
+  to = "https://restcountries.com/v3.1/all?fields=name,cca2,idd"
   status = 200
   force = true
 
