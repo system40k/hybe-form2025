@@ -1,6 +1,7 @@
 import translations from './translations.js';
 import { getGeoProfile, initializeGeoAutofill } from '../geo-autofill.js';
 import '../form-safety.js';
+import '../responsive-ui.js';
 import '../flow-orchestrator.js';
 
 const LANGUAGE_READY_EVENT = 'hybe:language-ready';
@@ -47,8 +48,6 @@ class LanguageDetector {
     if (!selector) return;
 
     selector.addEventListener('change', (event) => {
-      // Prevent the legacy script.js selector handler from becoming a second
-      // language authority. This module owns preference + translation state.
       event.stopImmediatePropagation();
       const selected = selector.value;
       if (selected === 'auto') {
@@ -127,7 +126,6 @@ class LanguageDetector {
     if (!this.supportedLanguages.includes(lang)) lang = 'ko';
     this.currentLang = lang;
     localStorage.setItem('hybe_preferred_language', lang);
-    // Mirror only for backward compatibility; script.js no longer controls selection.
     localStorage.setItem('hybe-language', lang);
     localStorage.setItem('hybe-language-prompt-accepted', 'true');
     document.documentElement.lang = lang;
