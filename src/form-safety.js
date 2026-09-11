@@ -1,3 +1,5 @@
+import './phone-autodetect.js';
+
 const LEGACY_LANGUAGE_KEY = 'hybe-language';
 const LEGACY_PROMPT_KEY = 'hybe-language-prompt-accepted';
 const AUTHORITATIVE_LANGUAGE_KEY = 'hybe_preferred_language';
