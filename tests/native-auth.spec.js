@@ -60,3 +60,32 @@ for (const width of [320, 375, 768, 1440]) {
     }
   });
 }
+
+for (const width of [320, 375, 430, 768]) {
+  test(`wizard controls do not overlap at ${width}px`, async ({ page }) => {
+    await page.setViewportSize({ width, height: 800 });
+    await page.goto('/');
+    await page.waitForFunction(() => Boolean(document.querySelector('.wizard-nav')));
+
+    const result = await page.evaluate(() => {
+      const prev = document.querySelector('#prev-btn').getBoundingClientRect();
+      const status = document.querySelector('#wizard-status').getBoundingClientRect();
+      const next = document.querySelector('#next-btn').getBoundingClientRect();
+      const indicators = Array.from(document.querySelectorAll('.step-indicator')).map(el => el.getBoundingClientRect());
+      return {
+        prevRight: prev.right,
+        statusLeft: status.left,
+        statusRight: status.right,
+        nextLeft: next.left,
+        navInsideViewport: prev.left >= 0 && next.right <= window.innerWidth,
+        indicatorsInsideViewport: indicators.every(box => box.left >= 0 && box.right <= window.innerWidth),
+      };
+    });
+
+    expect(result.navInsideViewport).toBe(true);
+    expect(result.prevRight).toBeLessThanOrEqual(result.statusLeft);
+    expect(result.statusRight).toBeLessThanOrEqual(result.nextLeft);
+    expect(result.indicatorsInsideViewport).toBe(true);
+    await expect(page.locator('#wizard-status')).toHaveText('Step 1 of 5');
+  });
+}
